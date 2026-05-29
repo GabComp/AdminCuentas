@@ -1,4 +1,5 @@
-﻿using AdministradorDeCuentas.Models.APIRecibos;
+﻿using AdministradorDeCuentas.Filters;
+using AdministradorDeCuentas.Models.APIRecibos;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,6 +18,7 @@ using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace PrototipoComapa.Controllers.Servicios.TramitesDisponibles
 {
+    [ValidarSesion]
     public class RecibosController : Controller
     {
         //private readonly HttpClient _ApiRecibos;

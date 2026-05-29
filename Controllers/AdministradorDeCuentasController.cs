@@ -1,4 +1,5 @@
-﻿using AdministradorDeCuentas.Models.APIRecibos;
+﻿using AdministradorDeCuentas.Filters;
+using AdministradorDeCuentas.Models.APIRecibos;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 //using Newtonsoft.Json;
@@ -12,6 +13,7 @@ using static PrototipoComapa.Models.API.Transactions.UsuarioWebTransactions;
 
 namespace AdministradorDeCuentas.Controllers
 {
+    [ValidarSesion]
     public class AdministradorDeCuentasController : Controller
     {
         private readonly IConfiguration _configuration;

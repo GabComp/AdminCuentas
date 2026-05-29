@@ -7,6 +7,7 @@ using System.Text;
 
 namespace AdministradorDeCuentas.Controllers
 {
+    
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -29,19 +30,22 @@ namespace AdministradorDeCuentas.Controllers
         {
             return View();
         }
+
         public IActionResult Registro()
         {
             return View();
         }
+
         public IActionResult RestableceContra()
         {
             return View();
         }
+        [ValidarSesion]
         public IActionResult ActualizarDatos()
         {
             return View();
         }
-
+        [ValidarSesion]
         public IActionResult Privacy()
         {
             return View();

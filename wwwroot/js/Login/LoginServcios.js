@@ -13,6 +13,7 @@ let objConsultarCuentas = {
 
 $(document).ready(function () {
     //localStorage.clear();
+    CerrarSesion();
     $("#perfiLink").hide();
 
     setTimeout(() => {
@@ -108,6 +109,26 @@ function ConsultarCuentasUsuario() {
             } else {
                 Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
             }
+        },
+        error: function () {
+            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
+        }
+    });
+};
+
+function CerrarSesion() {
+    $.ajax({
+        contentType: "application/json; charset=utf-8",
+        url: '/Login/CerrarSesion',
+        type: "POST",
+        data: JSON.stringify({}),
+        cache: false,
+        success: function (data) {
+            //if (data.exito) {
+            //    //console.log(data);
+            //} else {
+            //    Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
+            //}
         },
         error: function () {
             Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });

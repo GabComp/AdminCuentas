@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Visor PDF";
+    var rutaPDF = ViewBag.RutaPDF ?? "~/archivos/fundamento_recibo.pdf";
+}
+
+<div style="height: 90vh; width: 100%">
+    <iframe src="~/pdfjs/=@rutaPDF"
+        width="100%"
+        height="100%"
+        style="border: none;"
+    ></iframe>
+</div>

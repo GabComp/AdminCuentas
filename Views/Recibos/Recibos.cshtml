@@ -1,0 +1,203 @@
+﻿@{
+    ViewData["Title"] = "Documentos Disponibles";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="~/css/Recibos/RecibosUsuario.css" rel="stylesheet" />
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>Historial de Consumo - Recibos</h1>
+            <p>Accede y descarga tus documentos de manera sencilla</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Opción para cambiar entre vista de lista o tarjetas -->
+        <div class="view-toggle justify-content-between">
+            <div class="col-3">
+                <label for="SelectCuentaRecibos">Cambiar de cuenta</label>
+                <select id="SelectCuentaRecibos" class="form-select">
+                    
+                </select>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="toggle-btn active" id="listViewBtn">
+                    <i class="fas fa-list"></i> Vista de Lista
+                </button>
+                <button class="toggle-btn" id="cardViewBtn">
+                    <i class="fas fa-th-large"></i> Vista de Tarjetas
+                </button>
+            </div>
+        </div>
+
+        <!-- VISTA DE LISTA (predeterminada) -->
+        <section class="documents-section" id="listView">
+            @* <h2 class="section-title">Lista de Documentos</h2> *@
+
+            <ul class="document-list">
+                <!-- Documento 1 -->
+                @* <li class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">
+                            <i class="far fa-file-pdf"></i>
+                        </div>
+                        <div class="document-details">
+                            <h3>Recibo de Energía Enero 2024</h3>
+                            <p>PDF • 245 KB • Actualizado: 15/01/2024</p>
+                        </div>
+                    </div>
+                    <div class="document-actions">
+                        <button class="btn btn-view">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </li> *@
+
+                <!-- Documento 2 -->
+                @* <li class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">
+                            <i class="far fa-file-pdf"></i>
+                        </div>
+                        <div class="document-details">
+                            <h3>Contrato de Servicio</h3>
+                            <p>PDF • 512 KB • Actualizado: 10/01/2024</p>
+                        </div>
+                    </div>
+                    <div class="document-actions">
+                        <button class="btn btn-view">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </li> *@
+
+                <!-- Documento 3 -->
+                @* <li class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">
+                            <i class="far fa-file-word"></i>
+                        </div>
+                        <div class="document-details">
+                            <h3>Reglamento de Usuario</h3>
+                            <p>DOCX • 128 KB • Actualizado: 05/01/2024</p>
+                        </div>
+                    </div>
+                    <div class="document-actions">
+                        <button class="btn btn-view">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </li> *@
+
+                <!-- Documento 4 -->
+                @* <li class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">
+                            <i class="far fa-file-excel"></i>
+                        </div>
+                        <div class="document-details">
+                            <h3>Historial de Consumo</h3>
+                            <p>XLSX • 345 KB • Actualizado: 01/01/2024</p>
+                        </div>
+                    </div>
+                    <div class="document-actions">
+                        <button class="btn btn-view">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </li> *@
+            </ul>
+        </section>
+
+        <!-- VISTA DE TARJETAS (oculta inicialmente) -->
+        <section class="documents-section" id="cardView" style="display: none;">
+            <h2 class="section-title">Documentos en Tarjetas</h2>
+
+            <div class="document-cards">
+                <!-- Tarjeta 1 -->
+                @* <div class="document-card">
+                    <div class="card-icon">
+                        <i class="far fa-file-pdf"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Recibo de Energía Enero 2024</h3>
+                        <p>Recibo correspondiente al consumo del mes de enero del año 2024 con detalles de consumo y tarifas aplicadas.</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-view">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </div> *@
+
+                <!-- Tarjeta 2 -->
+                @* <div class="document-card">
+                    <div class="card-icon">
+                        <i class="far fa-file-pdf"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Contrato de Servicio</h3>
+                        <p>Documento oficial que establece los términos y condiciones del servicio prestado por la compañía.</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-view">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </div> *@
+
+                <!-- Tarjeta 3 -->
+                @* <div class="document-card">
+                    <div class="card-icon">
+                        <i class="far fa-file-word"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Reglamento de Usuario</h3>
+                        <p>Normativas y regulaciones que deben seguir los usuarios del servicio para su correcto funcionamiento.</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-view">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                        <button class="btn btn-download">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                </div> *@
+            </div>
+        </section>
+    </main>
+
+    @section Scripts {
+        <script src="~/js/Recibos/Recibos.js?v=@(DateTime.Now.Ticks)"></script>
+    }
+    
+</body>
+</html>

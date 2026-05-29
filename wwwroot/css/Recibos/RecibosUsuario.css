@@ -1,0 +1,271 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+.header {
+/*    background-color: #AB0033;*/
+    color: black;
+    padding: 20px 0;
+    text-align: center;
+    margin-bottom: 40px;
+    /*box-shadow: 0 4px 12px rgba(171, 0, 51, 0.2);*/
+}
+
+    .header h1 {
+        font-size: 2.5rem;
+        font-weight: 300;
+        margin-bottom: 10px;
+    }
+
+    .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.documents-section {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    margin-bottom: 150px;
+}
+
+.section-title {
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+    font-weight: 600;
+}
+
+/* Estilo para lista de documentos */
+.document-list {
+    list-style: none;
+}
+
+.document-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    background-color: #fdfdfd;
+}
+
+    .document-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: #BC955C;
+    }
+
+.document-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.document-icon {
+    background-color: #f8f8f8;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #AB0033;
+    font-size: 1.3rem;
+}
+
+.document-details h3 {
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.document-details p {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.document-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Botones */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.btn-view {
+    background-color: #BC955C;
+    color: white;
+}
+
+    .btn-view:hover {
+        background-color: #a8834a;
+        transform: translateY(-2px);
+    }
+
+.btn-download {
+    background-color: #AB0033;
+    color: white;
+}
+
+    .btn-download:hover {
+        background-color: #8a0029;
+        transform: translateY(-2px);
+    }
+
+/* Versión con tarjetas (alternativa) */
+.document-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.document-card {
+    background-color: white;
+    border: 1px solid #eaeaea;
+    border-radius: 10px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+    .document-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        border-color: #BC955C;
+    }
+
+.card-icon {
+    background-color: #f8f8f8;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #AB0033;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+.card-content h3 {
+    color: #333;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.card-content p {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.card-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 10px;
+}
+
+    .card-actions .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+/* Para alternar entre lista y tarjetas */
+.view-toggle {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.toggle-btn {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #666;
+}
+
+    .toggle-btn.active {
+        background-color: #AB0033;
+        color: white;
+        border-color: #AB0033;
+    }
+
+/* Responsive */
+@media (max-width: 768px) {
+
+    .document-item {
+        display: flex;
+        flex-direction: column; 
+        gap: 12px;
+    }
+
+    .document-info {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .document-details h3 {
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .document-details p {
+        font-size: 0.85rem;
+        margin: 0;
+0    }
+
+    .document-actions {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+    }
+
+        .document-actions .btn {
+            flex: 1; /* 🔴 que se repartan el ancho */
+            justify-content: center;
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+}

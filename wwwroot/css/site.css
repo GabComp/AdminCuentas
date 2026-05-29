@@ -1,0 +1,247 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif !important;
+}
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+.form-control::placeholder {
+    font-style: italic;
+    color: #999;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.layout-root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout-content {
+    flex: 1;
+}
+
+.layout-footer {
+    margin-top: auto;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.fas, .far, .fab {
+    font-family: "Font Awesome 5 Free" !important;
+    font-weight: 900;
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+#navBar {
+    padding: 0;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+#contenedorBar {
+    padding: 0;
+}
+
+#bar {
+    background-color: #BC955C;
+    padding: 0;
+}
+
+#logoPerfil {
+    display: flex;
+    align-items: center;
+}
+
+#perfiLink {
+    text-decoration: none;
+    color: white;
+    display: none;
+}
+
+
+#Menu {
+    align-self: stretch;
+    background: linear-gradient( 180deg, #BC955C 0 5%, #ab0033 5% 100% );
+    padding: 0 15px 0 50px;
+    justify-content: center;
+    align-content: center;
+}
+
+    #Menu li a {
+        color: #F2F2F2;
+    }
+
+    #Menu .nav-link {
+        font-family: 'Roboto', sans-serif !important;
+    }
+
+ul {
+    list-style: none;
+}
+
+.menuItem {
+    min-width: 200px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 100;
+}
+
+    .menuItem a {
+        background-color: #ab0033f5;
+        text-decoration: none;
+        color: #F2F2F2;
+        padding: 10px 15px;
+        display: block;
+        position: relative;
+    }
+
+        .menuItem a::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            border-bottom: 1.5px solid #000;
+        }
+
+    .menuItem li a:hover {
+        background-color: #BC955C
+    }
+
+#MenuList li ul {
+    display: none;
+    position: absolute;
+}
+
+#MenuList li:hover > ul {
+    display: block;
+}
+
+/*Detectar modo oscuro*/
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1a1a1a;
+        color: white;
+    }
+}
+
+.FooterUp {
+    background-color: #333333;
+    color: #F1EEEE;
+    padding: 0;
+    display: flex;
+    justify-content: space-between
+}
+
+.iconosRedes {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-right: 30px;
+}
+
+    .iconosRedes svg {
+        cursor: pointer;
+    }
+
+.FooterUp svg {
+    cursor: pointer;
+}
+
+.FooterDown {
+    background-color: #AB0033;
+    padding: 0px 15px;
+    color: #E8E8E8;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+}
+
+    .FooterDown svg {
+        margin: auto 0;
+        margin-left: 10px;
+        margin-bottom: 5px
+    }
+
+/*Responsive ... */
+@media (max-width: 768px) {
+    .FooterUp {
+        flex-direction: column;
+        padding: 5px;
+    }
+
+    .iconosRedes {
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .FooterDown {
+        flex-direction: column;
+        height: 120px;
+        width: 100%;
+        font-size: .9rem;
+    }
+
+    .coyrgith {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .FooterDown svg {
+        margin: 20px 10px;
+    }
+
+    .UbicacionFooter {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 344px) {
+    .FooterUp {
+        font-size: .8rem;
+    }
+
+    .FooterDown {
+        font-size: .8rem;
+    }
+}
+/*Responsive ... */
+
+/*.opcion-menu,
+.opcion-menu i,
+.opcion-menu svg {
+    color: white;
+    transition: 0.2s;
+}*/
+
+a:hover,
+a:hover i,
+a:hover svg {
+    color: white !important;
+    text-decoration: none;
+}
+
+.perfilUsuario{
+    background: #BC955C !important;
+}

@@ -1,0 +1,84 @@
+﻿:root {
+    --color-principal: #AB0033;
+    --color-secundario: #BC955C;
+}
+
+body {
+    background-color: #f8f9fa;
+}
+
+.card-form {
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.form-title {
+    color: var(--color-principal);
+    font-weight: 700;
+}
+
+.btn-principal {
+    background-color: var(--color-principal);
+    color: white;
+    border: none;
+    transition: all .3s ease;
+}
+
+.btn-principal:hover {
+    background-color: var(--color-secundario);
+    transform: translateY(-2px);
+}
+
+.form-control:focus {
+    border-color: var(--color-secundario);
+    box-shadow: 0 0 0 0.2rem rgba(188,149,92,.25);
+}
+
+label {
+    font-weight: 600;
+    color: #444;
+}
+
+.imagen-servicio {
+    max-height: 420px;
+    object-fit: contain;
+}
+
+.zoom-container {
+    overflow: hidden;
+    border-radius: 12px;
+    cursor: zoom-in;
+    height: 100%
+}
+
+.imagen-recibo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform .2s ease;
+}
+
+.form-control::placeholder {
+    font-style: italic;
+    color: #999;
+}
+
+.btn-principal {
+    background: #AB0033;
+    color: white;
+    border: none;
+}
+
+.btn-principal:hover {
+    background: #c1003b;
+    color: white;
+}
+
+.form-title {
+    color: #AB0033;
+    font-weight: bold;
+}
+
+button {
+    transition: all 0.2s ease;
+}

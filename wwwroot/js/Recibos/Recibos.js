@@ -142,7 +142,7 @@ function CargarCuentasSelect(idSelect, data) {
 function crearDocumentoItem(doc) {
     const li = document.createElement('li');
     li.className = 'document-item';
-
+    //Total: $${doc.total}
     li.innerHTML = `
         <div class="document-info">
             <div class="document-icon">
@@ -150,7 +150,7 @@ function crearDocumentoItem(doc) {
             </div>
             <div class="document-details">
                 <h3>${doc.ciclo_facturado}</h3>
-                <p>Consumo: ${doc.consumo} • Periodo: ${doc.periodo} • Total: $${doc.total}</p>
+                <p>Consumo: ${doc.consumo} • Periodo: ${doc.periodo} </p>
             </div>
         </div>
         <div class="document-actions">
@@ -170,14 +170,14 @@ function crearDocumentoItem(doc) {
 function crearDocumentoItemCard(doc) {
     const div = document.createElement('div');
     div.className = 'document-card';
-
+    // Total: $${doc.total}
     div.innerHTML = `
         <div class="card-icon">
             <i class="far fa-file-pdf"></i>
         </div>
         <div class="card-content">
             <h3>${doc.ciclo_facturado}</h3>
-            <p>Consumo: ${doc.consumo} • Periodo: ${doc.periodo} • Total: $${doc.total}</p>
+            <p>Consumo: ${doc.consumo} • Periodo: ${doc.periodo} </p>
         </div>
         <div class="card-actions">
             <button class="btn btn-view">

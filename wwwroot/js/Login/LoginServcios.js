@@ -4,7 +4,7 @@ let TxtUser = $("#TxtUser");
 let TxtPass = $("#TxtPass");
 let btnIniciarSession = $("#btnIniciarSession");
 let btnRegistrarse = $("#btnRegistrarse");
-let btnOmitir = $("#btnOmitir");
+//let btnOmitir = $("#btnOmitir");
 let perfiLink = $("#perfiLink");
 
 let objConsultarCuentas = {
@@ -18,7 +18,7 @@ $(document).ready(function () {
 
     setTimeout(() => {
         TxtPass.val('');
-    }, 200);
+    }, 300);
 });
 
 //eventos
@@ -38,13 +38,20 @@ btnIniciarSession.on('click', () => {
     }
 });
 
-btnRegistrarse.on('click', () => {
-    window.location.href = '/Home/Registro';
-});
+//btnRegistrarse.on('click', () => {
+//    window.location.href = '/Home/Registro';
+//});
 
-btnOmitir.on('click', () => {
-    window.location.href = '/Home/Inicio';
-});
+//btnOmitir.on('click', () => {
+//    window.location.href = '/Home/Inicio';
+//});
+
+TxtPass.on('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        btnIniciarSession.click();
+    }
+})
 
 //funciones
 function validarDatosLogin(user, pass) {
@@ -67,7 +74,7 @@ function validarDatosLogin(user, pass) {
 
 function LimpiarFormLogin() {
     TxtUser.val('');
-    //TxtCorreolog.val('');
+    //TxtCorreolog.val(''); 
     TxtPass.val('');
 }
 

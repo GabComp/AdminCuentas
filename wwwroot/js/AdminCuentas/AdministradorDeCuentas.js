@@ -11,7 +11,7 @@ let objCuentas = {
     username: "alexis",
     password: "1234"
 };
-let DatosValidacion = {
+let objDatosValidacion = {
     alias: "VALIDA_CUENTA",
     filtros: [
         {
@@ -51,7 +51,10 @@ btnRegistrarServicio.on('click', function () {
         objActionsCuentaUsuario.Nombre_Propietario = txtNombreServicio.val();
         objActionsCuentaUsuario.PAGO_TOTAL = txtTotalPagar.val();
         objActionsCuentaUsuario.ALIAS_CUENTA = txtNombreCorto.val();
-        ActionsCuentaUsuario();
+        objDatosValidacion.filtros[0].id_cuenta = txtNumeroServicio.val();
+        objDatosValidacion.filtros[0].nombre = txtNombreServicio.val();
+        objDatosValidacion.filtros[0].total = txtTotalPagar.val();
+        ValidarCuentasUsuarios();
     } else {
         Swal.fire({ title: "ERROR!!", text: `${ValidarFormularioCuenta()}`, icon: "error" });
     }
@@ -209,7 +212,7 @@ function LLenarTabla(data, Tab) {
                 render: function (data, type, row) {
                     return `
                         <center><button type="button"
-                                class="btn-eliminarCuenta btn btn-primary"
+                                class="btn-eliminarCuenta btn btn-danger"
                                 data-id="${row.cuentA_COMAPA}"
                                 data-tabla="${Tab}">
                             <i class="fas fa-trash"></i>
@@ -244,7 +247,7 @@ function LLenarTabla(data, Tab) {
 };
 
 //AJAX
-function LoginCuentas() {
+function LoginCuentas() {// obtiene el token 
     $.ajax({
         contentType: "application/json; charset=utf-8",
         url: '/AdministradorDeCuentas/LoginCuentas',
@@ -252,7 +255,7 @@ function LoginCuentas() {
         data: JSON.stringify(objCuentas),
         cache: false,
         success: function (data) {
-            if (data.ok) { ValidarLoginCuentas();}
+            //if (data.ok) { ValidarLoginCuentas();}
         },
         error: function () {
             Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
@@ -260,20 +263,22 @@ function LoginCuentas() {
     });
 };
 
-function ValidarLoginCuentas() {
+function ValidarCuentasUsuarios() {
     $.ajax({
         contentType: "application/json; charset=utf-8",
-        url: '/AdministradorDeCuentas/ValidarLoginCuentas',
+        url: '/AdministradorDeCuentas/ValidarCuentasUsuarios',
         type: "POST",
-        data: JSON.stringify(DatosValidacion),
+        data: JSON.stringify(objDatosValidacion),
         cache: false,
         success: function (data) {
-            //if (data.body[0].usrValido) {
-            //    console.log(data);
-            //}
+            if (data.body[0].usrValido) {
+                ActionsCuentaUsuario();
+            } else {
+                Swal.fire({ title: "ERROR!!", text: `NO SE ENCONTRO NINGUNA CUENTA CON LOS DATOS PROPORCIONADOS!`, icon: "error" });
+            }
         },
         error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
+            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INTENTAR VERIFICAR LA CUENTA!`, icon: "error" });
         }
     });
 };
@@ -290,7 +295,7 @@ function ConsultarCuentasUsuario() {
                 console.log(data);
                 LLenarTabla(data.datos, 'tablaCuentas');
             } else {
-                Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
+                //Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
             }
         },
         error: function () {

@@ -41,7 +41,7 @@ $(document).ready(function () {
     setTimeout(() => {
         TxtNewUser.val('');
         TxtPassW.val('');
-    }, 200);
+    }, 300);
 });
 
 //eventos

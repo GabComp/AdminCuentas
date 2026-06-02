@@ -114,7 +114,7 @@ function ConsultarCuentasUsuario() {
             if (data.exito) {
                 //console.log(data);
             } else {
-                Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
+                //Swal.fire({ title: "ERROR!!", text: `gzfbhtfgb ${data.mensaje}`, icon: "error" });
             }
         },
         error: function () {

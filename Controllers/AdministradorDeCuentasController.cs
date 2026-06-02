@@ -116,7 +116,7 @@ namespace AdministradorDeCuentas.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> ValidarLoginCuentas([FromBody] DatosValidacion Jcontent)
+        public async Task<JsonResult> ValidarCuentasUsuarios([FromBody] DatosValidacion Jcontent)
         {
             try
             {

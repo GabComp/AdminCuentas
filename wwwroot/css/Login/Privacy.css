@@ -1,0 +1,95 @@
+﻿body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 30px 180px;
+    color: #333;
+}
+
+.terminos-container {
+    max-width: 1100px;
+    margin: auto;
+    background: #fff;
+    padding: 50px;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,.08);
+}
+
+/* Títulos principales */
+h1 {
+    text-align: center;
+    color: #000;
+    font-size: 2rem;
+    margin-bottom: 15px;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+
+/* Títulos de sección */
+h2 {
+    margin-top: 40px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #BC955C;
+    color: #AB0033;
+    font-size: 1.4rem;
+}
+
+/* Subtítulos */
+h3 {
+    color: #AB0033;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+/* Párrafos */
+p {
+    text-align: justify;
+    line-height: 1.8;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+/* Listas */
+ul {
+    margin-left: 25px;
+    padding-left: 10px;
+}
+
+    ul li {
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+
+/* Secciones */
+.section {
+    margin-bottom: 30px;
+}
+
+/* Contacto */
+/* .contacto {
+        background: #f8fafc;
+        border-left: 5px solid #005a9c;
+        padding: 15px;
+        border-radius: 5px;
+    } */
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .terminos-container {
+        padding: 25px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+
+    p,
+    li {
+        font-size: 14px;
+    }
+}

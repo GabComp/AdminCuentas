@@ -68,18 +68,26 @@ btnBackIndex2.on('click', () => {
 });
 
 TxtNewTel.on('input', function () {
-    this.value = this.value.replace(/[^0-9]/g, '');
+    this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
+});
+
+TxtNewUser.on('input', function () {
+    this.value = this.value.replace(' ', '');
 });
 
 //funciones
 function validarDatos(Usuario, PassW, PassWConfirm, Mail, MailConfirm, Tel) {
-    const regexPass = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    //const regexPass = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    const regexPass = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-={}[\]:;"'<>,.?\/\\|]{8,}$/;
     const regexMail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const regexTel = /^\d{10}$/;
     const regexName = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/;
 
     //primero revisamos que se cumpla cada uno por separado para que encaso de que no detener la funcion y retornar el error de acuerdo al dato erroneo
     if (!Usuario.trim()) return 'El Usuario es requerido';
+    if (/\s/.test(Usuario)) {
+        return 'No se permiten espacios en el nombre de usuario.';
+    }
     if (!PassW.trim()) return 'La contraseña es requerido';
     if (!PassWConfirm.trim()) return 'Confirmar la contraseña es requerido';
     if (!Mail.trim()) return 'El Correo es requerido';

@@ -28,8 +28,16 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxBY3R1YWxpemFyRGF0b3MuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/Home/CambioContrasenia.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxDYW1iaW9Db250cmFzZW5pYS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/Home/Mensaje.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxNZW5zYWplLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/Home/Menu.cshtml]
@@ -50,6 +58,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/Home/VerPDF.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxWZXJQREYuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/PagoLinea/PagoLinea.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUGFnb0xpbmVhXFBhZ29MaW5lYS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/Recibos/Recibos.cshtml]

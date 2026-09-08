@@ -51,7 +51,11 @@ TxtPass.on('keydown', function (e) {
         e.preventDefault();
         btnIniciarSession.click();
     }
-})
+});
+
+TxtUser.on('input', function () {
+    this.value = this.value.replace(' ', '');
+});
 
 //funciones
 function validarDatosLogin(user, pass) {
@@ -59,8 +63,10 @@ function validarDatosLogin(user, pass) {
     const regexMail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const regexName = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/;
     if (!user.trim()) return 'El Usuario es requerido';
+    if (/\s/.test(user)) {
+        return 'No se permiten espacios en el nombre de usuario o correo.';
+    }
     if (!pass.trim()) return 'La contraseñia es requerido';
-
     
     if (user.includes("@")) {
         if (!regexMail.test(user)) return 'El formato del correo es incorrecto';
@@ -87,7 +93,7 @@ function Login() {
         data: JSON.stringify(objUser),
         cache: false,
         success: function (data) {
-            console.log(data);
+            //console.log(data);
             let result = data.datos[0].mensaje
             if (/^\d+$/.test(result) > 0) {
                 LimpiarFormLogin();

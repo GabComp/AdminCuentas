@@ -4,6 +4,7 @@ using PrototipoComapa.Utilerias;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using static PrototipoComapa.Models.API.Transactions.UsuarioWebTransactions;
 using static PrototipoComapa.Models.UsuarioWeb.UsuarioWebModel;
 
@@ -30,6 +31,17 @@ namespace PrototipoComapa.Controllers
             try
             {
                 // Crear la solicitud para la API externa
+                if(string.IsNullOrEmpty(request.USUARIO) 
+                    || string.IsNullOrEmpty(request.CONTRASENIA)
+                    || string.IsNullOrEmpty(request.ACCION))
+                {
+                    return Json(new UsuarioWebRegistroResponse
+                    {
+                        Exito = false,
+                        Mensaje = "Usuario y contraseña son requeridos",
+                        Url = ""
+                    });
+                }
                 var apiRequest = new ApiRequest
                 {
                     Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
@@ -50,7 +62,8 @@ namespace PrototipoComapa.Controllers
                                 CORREO_ELECTRONICO = request.CORREO_ELECTRONICO,
                                 TELEFONO_CEL = request.TELEFONO_CEL,
                                 MOTIVO_BAJA = request.MOTIVO_BAJA,
-                                ID_USUARIO = request.ID_USUARIO
+                                ID_USUARIO = request.ID_USUARIO,
+                                CODIGO = request.CODIGO
                             }
                         }
                     }
@@ -161,13 +174,64 @@ namespace PrototipoComapa.Controllers
             request.ID_USUARIO = HttpContext.Session.GetString("ID_USUARIO") ?? "";
             try
             {
-                // Crear la solicitud para la API externa
-                var apiRequest = new ApiRequest
+                if(request.ACCION == "ALTA" || request.ACCION == "ACT")
                 {
-                    Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
-                    User = _configuration["ApiSettings:User"] ?? "tu_usuario_default",
-                    Application = "LoginServicios",
-                    TransactionList = new List<TransactionRequest>
+                    if (string.IsNullOrEmpty(request.USUARIO) || string.IsNullOrEmpty(request.CONTRASENIA))
+                    {
+                        return Json(new UsuarioWebRegistroResponse
+                        {
+                            Exito = false,
+                            Mensaje = "Usuario y contraseña son requeridos",
+                            Url = ""
+                        });
+                    }
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(request.CORREO_ELECTRONICO, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                    {
+                        return Json(new UsuarioWebRegistroResponse
+                        {
+                            Exito = false,
+                            Mensaje = "El CORREO_ELECTRONICO no tiene un formato válido",
+                            Url = ""
+                        });
+                    }
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(request.TELEFONO_CEL, @"^\d{10}$"))
+                    {
+                        return Json(new UsuarioWebRegistroResponse
+                        {
+                            Exito = false,
+                            Mensaje = "El CORREO_ELECTRONICO no tiene un formato válido",
+                            Url = ""
+                        });
+                    }
+                    if (!Regex.IsMatch(request.USUARIO, @"^[a-zA-Z]+$"))
+                    {
+                        return Json(new UsuarioWebRegistroResponse
+                        {
+                            Exito = false,
+                            Mensaje = "El Nombre Solo debe contener Letras",
+                            Url = ""
+                        });
+                    }
+                } else if(request.ACCION == "BAJA")
+                {
+                    if(request.ID_USUARIO == null || request.ID_USUARIO == "")
+                    {
+                        return Json(new UsuarioWebRegistroResponse
+                        {
+                            Exito = false,
+                            Mensaje = "El ID_USUARIO es requerido para la acción de BAJA",
+                            Url = ""
+                        });
+                    }
+                }
+
+
+                    var apiRequest = new ApiRequest
+                    {
+                        Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
+                        User = _configuration["ApiSettings:User"] ?? "tu_usuario_default",
+                        Application = "LoginServicios",
+                        TransactionList = new List<TransactionRequest>
                     {
                         new TransactionRequest
                         {
@@ -182,11 +246,12 @@ namespace PrototipoComapa.Controllers
                                 CORREO_ELECTRONICO = request.CORREO_ELECTRONICO,
                                 TELEFONO_CEL = request.TELEFONO_CEL,
                                 MOTIVO_BAJA = request.MOTIVO_BAJA,
-                                ID_USUARIO = request.ID_USUARIO
+                                ID_USUARIO = request.ID_USUARIO,
+                                CODIGO = request.CODIGO
                             }
                         }
                     }
-                };
+                    };
 
                 Console.WriteLine(apiRequest);
 
@@ -328,7 +393,8 @@ namespace PrototipoComapa.Controllers
                                     CORREO_ELECTRONICO = user.CORREO_ELECTRONICO,
                                     TELEFONO_CEL = user.TELEFONO_CEL,
                                     MOTIVO_BAJA = user.MOTIVO_BAJA,
-                                    ID_USUARIO = user.ID_USUARIO
+                                    ID_USUARIO = user.ID_USUARIO,
+                                    CODIGO = user.CODIGO
                                 }
                             }
                         }
@@ -423,20 +489,94 @@ namespace PrototipoComapa.Controllers
                             return Json(new { exito = false, mensaje = "sucedio un error al generar el codigo de recuperacion" });
                         }
 
+                        var urlCambio = Url.Action(
+                                                    "CambioContrasenia",
+                                                    "Home",
+                                                    null,
+                                                    Request.Scheme);
                         //envio del correo
                         var emailService = new EmailService();
                         var envio = emailService.SendEmail
                         (
+                            //<h3>RECUPERACION DE CONTRASEÑA EN PORTAL COMAPA VICTORIA</h3>
                             correoDestino: user.CORREO_ELECTRONICO,
                             asunto: "RESTABLECIOMIENTO DE CONTRASEÑA",
                             mensajeCuerpo: $@"
-                            <h3>RECUPERACION DE CONTRASEÑA EN PORTAL COMAPA VICTORIA</h3>
-                            <p>ESTIMADO (A) {user.USUARIO},</p>
-                            <p>HEMOS RECIBIDO SU SOLICITUD PARA CAMBIAR LA CONTRASEÑA DE SU CUENTA EN PORTAL WEB DE COMAPA:</p>
-                            <p>RECUERDE PARA INICIAR SESION DEBE INGRESAR CON LOS SIGUIENTES DATO.
-                            USUARIO  <b>{user.USUARIO}</b></p>
-                            CONTRASEÑA  <b>{user.CONTRASENIA}</b></p>
-                            <p><b>REUCERDE CAMBIAR SU CONTRASEÑA EN SU PROXIMO INICIO DE SESION</b></p>
+                            <body style=""margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, Helvetica, sans-serif;"">
+
+                                <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background-color:#f4f4f4; padding:20px 0;"">
+                                    <tr>
+                                        <td align=""center"">
+
+                                            <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0""
+                                                   style=""background:#ffffff; border-radius:10px; overflow:hidden;"">
+
+                                                <tr>
+                                                    <td align=""center""
+                                                        style=""background:#AB0033; color:#ffffff; padding:10px;"">
+                                                        <h1 style=""margin:0;"">Recuperación de Contraseña</h1>
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td style=""padding:40px 30px; color:#333333;"">
+
+                                                        <h2 style=""margin-top:0;"">
+                                                            Hola {user.USUARIO},
+                                                        </h2>
+
+                                                        <p style=""font-size:16px; line-height:1.6;"">
+                                                            Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.
+                                                        </p>
+
+                                                        <p style=""font-size:16px; line-height:1.6;"">
+                                                            Si realizaste esta solicitud, el siguiente Codigo es una nueva contraseña temporal: 
+                                                        </p>
+
+                                                        <center><h1>{user.CONTRASENIA}</h1></center>
+
+                                                        <div style=""text-align:center; margin:35px 0;"">
+                                                            <a href=""{urlCambio}""
+                                                               style=""background:#AB0033;
+                                                                      color:#ffffff;
+                                                                      text-decoration:none;
+                                                                      padding:14px 30px;
+                                                                      border-radius:5px;
+                                                                      display:inline-block;
+                                                                      font-size:16px;
+                                                                      font-weight:bold;"">
+                                                                CAMBIAR CONTRASEÑA
+                                                            </a>
+                                                        </div>
+
+                                                        <p style=""font-size:14px; color:#666666;"">
+                                                            Este codigo expirará en 30 minutos por motivos de seguridad.
+                                                        </p>
+
+                                                        <p style=""font-size:14px; color:#666666;"">
+                                                            Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña actual seguirá siendo válida.
+                                                        </p>
+
+                                                        <hr style=""border:none; border-top:1px solid #dddddd; margin:30px 0;"">
+
+                                                        <p><b>LE RECOMENDAMOS CAMBIAR SU CONTRASEÑA EN SU PROXIMO INICIO DE SESION</b></p>
+
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td align=""center""
+                                                        style=""background:#f8f9fa; padding:20px; color:#666666; font-size:12px;"">
+                                                        © 2026 COMAPA - Cd. Victoria, Tamaulipas. Todos los derechos reservados.
+                                                    </td>
+                                                </tr>
+
+                                            </table>
+
+                                        </td>
+                                    </tr>
+                                </table>
+                            </body>
                             "
                         );
 

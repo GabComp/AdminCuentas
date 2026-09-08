@@ -45,8 +45,16 @@ namespace AdministradorDeCuentas.Controllers
         {
             return View();
         }
-        [ValidarSesion]
+        
         public IActionResult Privacy()
+        {
+            return View();
+        }
+        public IActionResult Mensaje()
+        {
+            return View();
+        }
+        public IActionResult CambioContrasenia()
         {
             return View();
         }

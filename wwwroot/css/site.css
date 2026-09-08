@@ -1,3 +1,14 @@
+:root{
+    --Rojo_Principal: #611232;
+    --Rojo_Secundario: #9b2247;
+    --Verde_Principal: #002f2a;
+    --Verde_Secundario: #1e5b4f;
+    --Dorado_Principal: #e6d194;
+    --Dorado_Secundario: #a57f2c;
+    --Gris_: #98989A;
+    --Negro_: #161a1d;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -54,14 +65,10 @@ html, body {
     align-items: center;
     display: flex;
     justify-content: space-between;
+    background-color: white;
 }
 
 #contenedorBar {
-    padding: 0;
-}
-
-#bar {
-    background-color: #BC955C;
     padding: 0;
 }
 
@@ -72,26 +79,25 @@ html, body {
 
 #perfiLink {
     text-decoration: none;
-    color: white;
     display: none;
 }
 
 
 #Menu {
     align-self: stretch;
-    background: linear-gradient( 180deg, #BC955C 0 5%, #ab0033 5% 100% );
+    color: black;
     padding: 0 15px 0 50px;
     justify-content: center;
     align-content: center;
 }
 
-    #Menu li a {
-        color: #F2F2F2;
-    }
+#Menu li a {
+    color: #000;
+}
 
-    #Menu .nav-link {
-        font-family: 'Roboto', sans-serif !important;
-    }
+#Menu .nav-link {
+    font-family: 'Roboto', sans-serif !important;
+}
 
 ul {
     list-style: none;
@@ -105,28 +111,33 @@ ul {
     z-index: 100;
 }
 
-    .menuItem a {
-        background-color: #ab0033f5;
-        text-decoration: none;
-        color: #F2F2F2;
-        padding: 10px 15px;
-        display: block;
-        position: relative;
-    }
+#logoMenu{
+    width: 180px;
+    height: 60px;
+}
 
-        .menuItem a::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 85%;
-            border-bottom: 1.5px solid #000;
-        }
+.menuItem a {
+    background-color: white;
+    text-decoration: none;
+    color: #F2F2F2;
+    padding: 10px 15px;
+    display: block;
+    position: relative;
+}
 
-    .menuItem li a:hover {
+.menuItem a::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    border-bottom: 1.5px solid #000;
+}
+
+    /* .menuItem li a:hover {
         background-color: #BC955C
-    }
+    } */
 
 #MenuList li ul {
     display: none;
@@ -238,10 +249,11 @@ ul {
 a:hover,
 a:hover i,
 a:hover svg {
-    color: white !important;
+    color: var(--Dorado_Principal) !important;
     text-decoration: none;
 }
 
 .perfilUsuario{
-    background: #BC955C !important;
+    /* background: #BC955C !important; */
+    color: #000 !important; 
 }

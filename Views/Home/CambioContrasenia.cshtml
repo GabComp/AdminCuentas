@@ -1,0 +1,67 @@
+﻿@{
+    Layout = null;
+}
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="~/css/Login/Registro.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container mt-3 " style="margin-bottom: 120px;">
+        <div class="login-container">
+            <div class="login-header">
+                <h2 style="color:white">Cambia tu Contraseña</h2>
+            </div>
+            <div class="login-body">
+                @* <h3 class="text-center mb-4" style="color: #333;">Iniciar Sesión</h3> *@
+                <form autocomplete="off" id="loginForm">
+                    <div class="mb-3">
+                        <label for="TxtCodigo" class="form-label" style="font-weight: 500;">Codigo:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock" style="color: #666;"></i>
+                            </span>
+                            <input type="text" class="form-control" id="TxtCodigo" placeholder="ingrsa el codgio del correo" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TxtPassChange" class="form-label" style="font-weight: 500;">Nueva Contraseña:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock" style="color: #666;"></i>
+                            </span>
+                            <input type="password" class="form-control" id="TxtPassChange" placeholder="debe contener 8 caracteres minimo un numero y una letra" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="TxtPassChangeConfrim" class="form-label" style="font-weight: 500;">Confirmar Nueva Contraseña:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock" style="color: #666;"></i>
+                            </span>
+                            <input type="password" class="form-control" id="TxtPassChangeConfrim" placeholder="debe contener 8 caracteres minimo un numero y una letra" required>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-login w-100 text-white" id="btnUpdateContra">
+                        <i class="fas fa-unlock-alt me-2"></i>Confirmar Cambio
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/Login/CambioContrasenia.js?v=@(DateTime.Now.Ticks)"></script>

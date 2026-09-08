@@ -9,6 +9,7 @@ let objUser = {
     TELEFONO_CEL: '',
     MOTIVO_BAJA: '',
     ID_USUARIO: '',
+    CODIGO: ''
 };
 
 function LimpiarObjetoUsuario() {
@@ -19,6 +20,7 @@ function LimpiarObjetoUsuario() {
     objUser.TELEFONO_CEL = '';
     objUser.MOTIVO_BAJA = '';
     objUser.ID_USUARIO = '';
+    objUser.CODIGO = '';
 };
 
 $(document).ready(function () {

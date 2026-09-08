@@ -35,7 +35,11 @@ btnLogOut.on('click', () => {
 });
 
 TxtNewTelUpdate.on('input', function () {
-    this.value = this.value.replace(/[^0-9]/g, '');
+    this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
+});
+
+TxtUserUpdate.on('input', function () {
+    this.value = this.value.replace(' ', '');
 });
 
 //funciones
@@ -46,6 +50,9 @@ function validarDatosUpdate(Usuario, Mail, MailConfirm, PassW, PassWConfirm, Tel
 
     //primero revisamos que se cumpla cada uno por separado para que encaso de que no detener la funcion y retornar el error de acuerdo al dato erroneo
     if (!Usuario.trim()) return 'El Usuario es requerido';
+    if (/\s/.test(Usuario)) {
+        return 'No se permiten espacios en el nombre de usuario.';
+    }
     if (!Mail.trim()) return 'El Correo es requerido';
     if (!MailConfirm.trim()) return 'Confirmar el Correo es requerido';
     if (!PassW.trim()) return 'La contraseña es requerido';

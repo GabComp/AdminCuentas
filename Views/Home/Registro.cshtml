@@ -1,6 +1,7 @@
-﻿@* @{
-    ViewData["Title"] = "Login Servicio";
-} *@
+﻿@{
+    // ViewData["Title"] = "Login Servicio";
+    Layout = null;
+}
 
 <html>
 <head>
@@ -26,7 +27,7 @@
                             <span class="input-group-text">
                                 <i class="fas fa-user" style="color: #666;"></i>
                             </span>
-                            <input type="text" class="form-control" id="TxtNewUser" placeholder="Nombre de Usuario" required>
+                            <input type="text" class="form-control" id="TxtNewUser" placeholder="Nombre de Usuario (No debe tener espacios)" required>
                         </div>
                     </div>
 
@@ -41,7 +42,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="TxtPassWConfrim" class="form-label" style="font-weight: 500;">Contraseña:</label>
+                        <label for="TxtPassWConfrim" class="form-label" style="font-weight: 500;">Confirmar Contraseña:</label>
                         <div class="input-group">
                             <span class="input-group-text">
                                 <i class="fas fa-lock" style="color: #666;"></i>
@@ -84,16 +85,18 @@
                         <input type="checkbox"
                                class="form-check-input"
                                id="chkTerminos"
-                               disabled />
+                                />
 
                         <label class="form-check-label" for="chkTerminos">
                             Acepto los
-                            <a href="~/docs/TerminosYCondiciones.pdf"
+                            @* <a href="~/docs/TerminosYCondiciones.pdf"
                                target="_blank"
                                id="lnkTerminos"
                                class="text-primary text-decoration-underline">
                                 Términos y Condiciones
-                            </a>
+                            </a> *@
+                            <a asp-area="" asp-controller="Home" asp-action="Privacy" id="lnkTerminos"
+                               class="text-primary text-decoration-underline" target="_blank">Términos y Condiciones</a>
                         </label>
                     </div>
 
@@ -115,6 +118,8 @@
     </div>
 </body>
 </html>
-@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/Login/Registrarse.js?v=@(DateTime.Now.Ticks)"></script>
-}

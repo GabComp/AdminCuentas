@@ -45,7 +45,7 @@ $(document).ready(function () {
 //eventos
 btnRegistrarServicio.on('click', function () {
     if (ValidarFormularioCuenta() === 'valido') {
-        console.log('Formulario válido');
+        //console.log('Formulario válido');
         objActionsCuentaUsuario.ACCION = 'ALTA';
         objActionsCuentaUsuario.CUENTA_COMAPA = txtNumeroServicio.val();
         objActionsCuentaUsuario.Nombre_Propietario = txtNombreServicio.val();
@@ -292,7 +292,7 @@ function ConsultarCuentasUsuario() {
         cache: false,
         success: function (data) {
             if (data.exito) {
-                console.log(data);
+                //console.log(data);
                 LLenarTabla(data.datos, 'tablaCuentas');
             } else {
                 //Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
@@ -306,7 +306,7 @@ function ConsultarCuentasUsuario() {
 
 function ActionsCuentaUsuario() {
     let windowChange = objActionsCuentaUsuario.ACCION == 'ALTA' ? true : false;
-    console.log(windowChange);
+    //console.log(windowChange);
     $.ajax({
         contentType: "application/json; charset=utf-8",
         url: '/AdministradorDeCuentas/ActionsCuentaUsuario',

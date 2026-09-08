@@ -15,6 +15,7 @@ namespace PrototipoComapa.Models.UsuarioWeb
             public string TELEFONO_CEL { get; set; }
             public string MOTIVO_BAJA { get; set; }
             public string ID_USUARIO { get; set; }
+            public string CODIGO { get; set; }
         }
         public class UsuarioWebRegistroResponse
         {
@@ -30,6 +31,8 @@ namespace PrototipoComapa.Models.UsuarioWeb
             public string mensaje { get; set; }
             [JsonPropertyName("mensaje2")]
             public string mensaje2 { get; set; }
+            [JsonPropertyName("mensaje3")]
+            public string mensaje3 { get; set; }
             [JsonPropertyName("NOMBRE")]
             public string NOMBRE { get; set; }
             [JsonPropertyName("CORREO")]

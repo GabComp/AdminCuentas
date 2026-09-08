@@ -1,259 +1,72 @@
-:root{
-    --Rojo_Principal: #611232;
-    --Rojo_Secundario: #9b2247;
-    --Verde_Principal: #002f2a;
-    --Verde_Secundario: #1e5b4f;
-    --Dorado_Principal: #e6d194;
-    --Dorado_Secundario: #a57f2c;
-    --Gris_: #98989A;
-    --Negro_: #161a1d;
+:root {
+    /* Identidad Institucional */
+    --color-gob-guinda: #691C32;
+    --color-gob-guinda-dark: #4D1222;
+    --color-gob-dorado: #BC955C;
+    --color-gob-dorado-light: #F7F3EC;
+    --color-text-main: #2D3748;
+    --color-bg-light: #F8F9FA;
+    --text-dark: #333333;
+    --color-white: #FFFFFF;
+    /* Glow para focus con dorado transparente */
+    --focus-glow: rgba(188, 149, 92, 0.25);
+    /* Asignación de Tema (Claro por defecto) */
+    --bg-body: var(--color-bg-light);
+    --bg-form-section: var(--color-white);
+    --text-primary: var(--color-text-main);
+    --text-secondary: #6c757d;
+    --input-bg: var(--color-white);
+    --input-border: #dee2e6;
+    --input-text: var(--text-dark);
+    --input-icon: #adb5bd;
+    --border-color: #f1f3f5;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    font-family: 'Roboto', sans-serif !important;
+/* Aplicar nueva fuente a todo el body */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa; /* Gris muy clarito para el fondo */
 }
 
-html {
-    font-size: 14px;
-    position: relative;
-    min-height: 100%;
+/* Efectos hover para los enlaces del menú */
+.custom-nav-link {
+    transition: all 0.2s ease-in-out;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem !important;
 }
 
-.form-control::placeholder {
-    font-style: italic;
-    color: #999;
-}
-
-html, body {
-    height: 100%;
-    margin: 0;
-}
-
-.layout-root {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.layout-content {
-    flex: 1;
-}
-
-.layout-footer {
-    margin-top: auto;
-}
-
-@media (min-width: 768px) {
-    html {
-        font-size: 16px;
-    }
-}
-
-.fas, .far, .fab {
-    font-family: "Font Awesome 5 Free" !important;
-    font-weight: 900;
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-#navBar {
-    padding: 0;
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    background-color: white;
-}
-
-#contenedorBar {
-    padding: 0;
-}
-
-#logoPerfil {
-    display: flex;
-    align-items: center;
-}
-
-#perfiLink {
-    text-decoration: none;
-    display: none;
-}
-
-
-#Menu {
-    align-self: stretch;
-    color: black;
-    padding: 0 15px 0 50px;
-    justify-content: center;
-    align-content: center;
-}
-
-#Menu li a {
-    color: #000;
-}
-
-#Menu .nav-link {
-    font-family: 'Roboto', sans-serif !important;
-}
-
-ul {
-    list-style: none;
-}
-
-.menuItem {
-    min-width: 200px;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    z-index: 100;
-}
-
-#logoMenu{
-    width: 180px;
-    height: 60px;
-}
-
-.menuItem a {
-    background-color: white;
-    text-decoration: none;
-    color: #F2F2F2;
-    padding: 10px 15px;
-    display: block;
-    position: relative;
-}
-
-.menuItem a::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 85%;
-    border-bottom: 1.5px solid #000;
-}
-
-    /* .menuItem li a:hover {
-        background-color: #BC955C
-    } */
-
-#MenuList li ul {
-    display: none;
-    position: absolute;
-}
-
-#MenuList li:hover > ul {
-    display: block;
-}
-
-/*Detectar modo oscuro*/
-@media (prefers-color-scheme: dark) {
-    body {
-        background-color: #1a1a1a;
-        color: white;
-    }
-}
-
-.FooterUp {
-    background-color: #333333;
-    color: #F1EEEE;
-    padding: 0;
-    display: flex;
-    justify-content: space-between
-}
-
-.iconosRedes {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding-right: 30px;
-}
-
-    .iconosRedes svg {
-        cursor: pointer;
+    .custom-nav-link:hover {
+        background-color: #f0f2f5;
+        color: var(--color-gob-guinda) !important;
+        transform: translateY(-1px);
     }
 
-.FooterUp svg {
-    cursor: pointer;
+/* Mejoras para el menú desplegable del perfil */
+.dropdown-menu {
+    animation: fadeIn 0.3s ease;
 }
 
-.FooterDown {
-    background-color: #AB0033;
-    padding: 0px 15px;
-    color: #E8E8E8;
-    height: 40px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 1rem;
+.dropdown-item {
+    transition: background-color 0.2s ease;
 }
 
-    .FooterDown svg {
-        margin: auto 0;
-        margin-left: 10px;
-        margin-bottom: 5px
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
     }
 
-/*Responsive ... */
-@media (max-width: 768px) {
-    .FooterUp {
-        flex-direction: column;
-        padding: 5px;
+    .dropdown-item.text-danger:hover {
+        background-color: #ffeef0; /* Fondo rojizo suave al pasar el mouse sobre cerrar sesión */
     }
 
-    .iconosRedes {
-        justify-content: center;
-        gap: 30px;
+/* Animación suave al abrir dropdowns */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 
-    .FooterDown {
-        flex-direction: column;
-        height: 120px;
-        width: 100%;
-        font-size: .9rem;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
-
-    .coyrgith {
-        justify-content: center;
-        text-align: center;
-    }
-
-    .FooterDown svg {
-        margin: 20px 10px;
-    }
-
-    .UbicacionFooter {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 344px) {
-    .FooterUp {
-        font-size: .8rem;
-    }
-
-    .FooterDown {
-        font-size: .8rem;
-    }
-}
-/*Responsive ... */
-
-/*.opcion-menu,
-.opcion-menu i,
-.opcion-menu svg {
-    color: white;
-    transition: 0.2s;
-}*/
-
-a:hover,
-a:hover i,
-a:hover svg {
-    color: var(--Dorado_Principal) !important;
-    text-decoration: none;
-}
-
-.perfilUsuario{
-    /* background: #BC955C !important; */
-    color: #000 !important; 
 }

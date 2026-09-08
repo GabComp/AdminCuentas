@@ -1,81 +1,108 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - AdministradorDeCuentas</title>
+    <title>@ViewData["Title"] - Comapa</title>
+
+    <!-- Google Fonts para una tipografía más moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    @* <link rel="stylesheet" href="~/AdministradorDeCuentas.styles.css" asp-append-version="true" /> *@
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="bg-light">
+    <!-- bg-light le da un fondo gris muy sutil para que resalten las tarjetas blancas -->
+
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow " id="navBar">
-            <div class="container-fluid" id="contenedorBar">
-                @* <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">PrototipoComapa</a> *@
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <!-- Navbar moderno con sombra sutil y fondo blanco puro -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm fixed-top">
+            <div class="container">
+                <!-- Usamos 'container' en lugar de 'container-fluid' para que no se estire demasiado en pantallas gigantes -->
+                <!-- Logo -->
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Menu">
+                    <img src="~/img/logo-comapa.png" alt="Logo Comapa" height="45" class="d-inline-block align-text-top" style="object-fit: contain;" />
+                </a>
+
+                <!-- Botón responsivo (Hamburguesa) -->
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" id="bar">
-                    <div id="logoPerfil">
-                        <a class="" asp-area="" asp-controller="Home" asp-action="Menu">
-                            @* 190X80 *@
-                            <span>
-                                <img src="~/img/logo-comapa.png" id="logoMenu" alt="Alternate Text" />
-                            </span>
-                        </a>
-                        <div id="Menu" class="perfilUsuario">
-                            <ul class="navbar-nav flex-grow-1" id="MenuList">
-                                <li class="nav-item">
-                                    <a class="nav-link perfilUsuario" id="perfiLink" onclick="return false;"></a>
-                                    <ul class="navbar-nav flex-grow-1 menuItem">
-                                        <li><a class="nav-link" href="/Home/ActualizarDatos">Actuallizar Datos del Perfil</a></li>
-                                        <li><a class="nav-link" href="/Home/index">Cerrar Sesion</a></li>
-                                    </ul>
+
+                <!-- Contenido del Navbar -->
+                <div class="collapse navbar-collapse" id="navbarContent">
+
+                    <!-- Enlaces principales (Alineados a la izquierda/centro) -->
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 fw-medium">
+                        <li class="nav-item mx-1">
+                            <a class="nav-link custom-nav-link" asp-area="" asp-controller="Home" asp-action="Menu">
+                                <i class="fa-solid fa-house-chimney me-1"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item mx-1">
+                            <a class="nav-link custom-nav-link" asp-area="" asp-controller="AdministradorDeCuentas" asp-action="AdministradorDeCuentas">
+                                <i class="fa-solid fa-users-gear me-1"></i> Administrar Cuenta
+                            </a>
+                        </li>
+                        <li class="nav-item mx-1">
+                            <a class="nav-link custom-nav-link" asp-area="" asp-controller="Recibos" asp-action="Recibos">
+                                <i class="fa-solid fa-file-invoice-dollar me-1"></i> Consultar Recibos
+                            </a>
+                        </li>
+                        <li class="nav-item mx-1">
+                            <a class="nav-link custom-nav-link" asp-area="" asp-controller="Recibos" asp-action="Recibos">
+                                <!-- Ojo: Cambiar la acción si es diferente a Recibos -->
+                                <i class="fa-solid fa-credit-card me-1"></i> Pago en Línea
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Menú de Usuario (Alineado a la derecha) -->
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 fw-medium text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-circle-user fa-xl text-secondary"></i>
+                                <span id="nombreUsuarioBadge">Mi Perfil</span>
+                            </a>
+                            <!-- Dropdown moderno -->
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3" aria-labelledby="userDropdown">
+                                <li>
+                                    <a class="dropdown-item py-2" href="/Home/ActualizarDatos">
+                                        <i class="fa-solid fa-user-pen me-2 text-muted"></i> Actualizar Datos
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item py-2 text-danger fw-bold" href="/Home/index">
+                                        <i class="fa-solid fa-right-from-bracket me-2"></i> Cerrar Sesión
+                                    </a>
                                 </li>
                             </ul>
-                        </div>
-                    </div>
+                        </li>
+                    </ul>
 
-
-                    <div id="Menu">
-                        <ul class="navbar-nav flex-grow-1">
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Menu">Menu</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="AdministradorDeCuentas" asp-action="AdministradorDeCuentas">Administrar Cuenta</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Recibos" asp-action="Recibos">Consultar Recibos</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-area="" asp-controller="Recibos" asp-action="Recibos">Pago en Linea</a>
-                            </li>
-                            @* <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                            </li> *@
-                        </ul>
-                    </div>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
+
+    <!-- Agregamos un padding-top para compensar el navbar 'fixed-top' -->
+    <div class="container" style="margin-top: 90px; min-height: 80vh;">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-   @*  <footer class="border-top footer text-muted">
+    <!-- Footer moderno y minimalista -->
+    <footer class="footer mt-auto py-3 bg-white border-top text-center text-muted">
         <div class="container">
-            &copy; 2026 - AdministradorDeCuentas - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <small>&copy; @DateTime.Now.Year - COMAPA - Administrador de Cuentas. Todos los derechos reservados.</small>
         </div>
-    </footer> *@
+    </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> <!-- Importante: bundle incluye Popper.js para que funcione el dropdown -->
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @await RenderSectionAsync("Scripts", required: false)

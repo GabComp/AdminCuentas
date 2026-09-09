@@ -19,7 +19,6 @@ wwwroot\js\Login\CambioContrasenia.js
 wwwroot\js\Login\LoginServcios.js
 wwwroot\js\Login\Registrarse.js
 wwwroot\js\Login\restablecerContrasenia.js
-wwwroot\js\Recibos\Recibos.js
 wwwroot\js\site.js
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css
 wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
@@ -78,3 +77,4 @@ wwwroot\lib\jquery\dist\jquery.js
 wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
+wwwroot\js\Recibos\Recibos.js

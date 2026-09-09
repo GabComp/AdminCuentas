@@ -121,12 +121,12 @@ function CargarCuentasSelect(idSelect, data) {
     const select = $(`${idSelect}`);
     select.empty();
 
-    select.append(
-            $('<option>', {
-                value: '0',
-                text: 'Selecciona una Cuenta'
-            })
-        );
+    //select.append(
+    //        $('<option>', {
+    //            value: '0',
+    //            text: 'Selecciona una Cuenta'
+    //        })
+    //    );
 
     data.forEach(cuenta => {
 
@@ -138,26 +138,37 @@ function CargarCuentasSelect(idSelect, data) {
         );
 
     });
+
+    let valor = $('#SelectCuentaRecibos').val();
+    if (valor != 0) {
+        DatosValidacion.filtros[0].id_cuenta = valor;
+        ConsultaRecibos();
+    } else {
+        renderizarDocumentos(dataRecibos);
+    }
 };
+
 function crearDocumentoItem(doc) {
     const li = document.createElement('li');
-    li.className = 'document-item';
-    //Total: $${doc.total}
+    // Se agrega mb-3 a la clase para separar cada fila en la vista de lista
+    li.className = 'document-item mb-3';
+
     li.innerHTML = `
         <div class="document-info">
             <div class="document-icon">
                 <i class="far fa-file-pdf"></i>
             </div>
             <div class="document-details">
-                <h3>${doc.ciclo_facturado}</h3>
-                <p>Consumo: ${doc.consumo} • Periodo: ${doc.periodo} </p>
+                <h3 class="mb-1">${doc.ciclo_facturado}</h3>
+                <p class="mb-0 text-muted">Consumo: ${doc.consumo} • Periodo: ${doc.periodo} </p>
             </div>
         </div>
-        <div class="document-actions">
-            <button class="btn btn-view">
+        <!-- Se aplica d-flex, gap-2 y flex-wrap para acomodar los botones. mt-3 separa los botones del texto en móviles -->
+        <div class="document-actions d-flex flex-wrap flex-sm-nowrap gap-2 mt-3 mt-sm-0">
+            <button class="btn btn-view flex-grow-1 mb-2 mb-sm-0">
                 <i class="fas fa-eye"></i> Ver
             </button>
-            <button class="btn btn-download">
+            <button class="btn btn-download flex-grow-1 mb-2 mb-sm-0">
                 <i class="fas fa-download"></i> Descargar
             </button>
         </div>
@@ -165,25 +176,39 @@ function crearDocumentoItem(doc) {
 
     asignarEventos(li, doc);
     return li;
-};
+}
 
 function crearDocumentoItemCard(doc) {
     const div = document.createElement('div');
-    div.className = 'document-card';
-    // Total: $${doc.total}
+    const container = document.querySelector('#cardView .document-cards');
+    container.classList.add('row'); // Añade la clase row
+    // Se agrega p-3 para reducir el relleno interno (padding) y hacer la tarjeta más compacta
+    div.className = 'document-card d-flex flex-column h-100 mb-3 p-3';
+
     div.innerHTML = `
-        <div class="card-icon">
-            <i class="far fa-file-pdf"></i>
+        <div class="card-icon mb-2">
+            <!-- fs-4 hace el icono ligeramente más pequeño si estabas usando el tamaño por defecto -->
+            <i class="far fa-file-pdf fs-4"></i>
         </div>
-        <div class="card-content">
-            <h3>${doc.ciclo_facturado}</h3>
-            <p>Consumo: ${doc.consumo} • Periodo: ${doc.periodo} </p>
+        
+        <div class="card-content flex-grow-1">
+            <!-- Se cambia <h3> a <h5> para reducir el tamaño del título -->
+            <h5 class="mb-1">${doc.ciclo_facturado}</h5>
+            
+            <!-- Se agrega la clase 'small' para que el texto descriptivo ocupe menos espacio -->
+            <p class="mb-3 text-muted small">
+                Consumo: ${doc.consumo} • Periodo: ${doc.periodo} 
+            </p>
         </div>
-        <div class="card-actions">
-            <button class="btn btn-view">
+        
+        <!-- Cambiamos a flex-column para forzar un botón debajo del otro. 
+             El gap-2 se encarga del espacio entre ellos sin necesidad de poner mb-2 en cada botón -->
+        <div class="card-actions d-flex flex-column gap-2 mt-auto">
+            <!-- w-100 asegura que los botones tomen todo el ancho de la tarjeta -->
+            <button class="btn btn-view w-100">
                 <i class="fas fa-eye"></i> Ver
             </button>
-            <button class="btn btn-download">
+            <button class="btn btn-download w-100">
                 <i class="fas fa-download"></i> Descargar
             </button>
         </div>

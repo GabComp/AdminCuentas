@@ -1,125 +1,289 @@
 ﻿@{
-    // ViewData["Title"] = "Login Servicio";
     Layout = null;
 }
 
-<html>
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+
+    <title>Registrar Usuario</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <link href="~/css/Login/Registro.css" rel="stylesheet" />
 </head>
+
 <body>
-    <div class="container mt-3 " style="margin-bottom: 120px;">
-        <div class="login-container">
-            <div class="login-header">
-                <h2 style="color:white">Registrar Nuevo Usuario</h2>
+
+    <main class="register-page">
+
+        <div class="register-wrapper">
+
+            <div class="login-container">
+
+                <!-- HEADER -->
+                <div class="login-header">
+
+                    <div class="security-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+
+                    <h2>Registrar Nuevo Usuario</h2>
+
+                    <p>
+                        Completa los datos para crear tu cuenta de usuario.
+                    </p>
+
+                </div>
+
+
+                <!-- BODY -->
+                <div class="login-body">
+
+                    <form autocomplete="off" id="loginForm">
+
+                        <!-- USUARIO -->
+                        <div class="mb-3">
+
+                            <label for="TxtNewUser" class="form-label">
+                                Usuario
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+
+                                <input type="text"
+                                       class="form-control"
+                                       id="TxtNewUser"
+                                       placeholder="Nombre de usuario (sin espacios)"
+                                       required />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CONTRASEÑA -->
+                        <div class="mb-3">
+
+                            <label for="TxtPassW" class="form-label">
+                                Contraseña
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+
+                                <input type="password"
+                                       class="form-control"
+                                       id="TxtPassW"
+                                       placeholder="Mínimo 8 caracteres, un número y una letra"
+                                       required />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CONFIRMAR CONTRASEÑA -->
+                        <div class="mb-3">
+
+                            <label for="TxtPassWConfrim" class="form-label">
+                                Confirmar Contraseña
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+
+                                <input type="password"
+                                       class="form-control"
+                                       id="TxtPassWConfrim"
+                                       placeholder="Confirma tu contraseña"
+                                       required />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CORREO -->
+                        <div class="mb-3">
+
+                            <label for="TxtMail" class="form-label">
+                                Correo electrónico
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+
+                                <input type="email"
+                                       class="form-control"
+                                       id="TxtMail"
+                                       placeholder="ejemplo@gmail.com"
+                                       required />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CONFIRMAR CORREO -->
+                        <div class="mb-3">
+
+                            <label for="TxtMailConfirm" class="form-label">
+                                Confirmar correo electrónico
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+
+                                <input type="email"
+                                       class="form-control"
+                                       id="TxtMailConfirm"
+                                       placeholder="Confirma tu correo"
+                                       required />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- TELEFONO -->
+                        <div class="mb-4">
+
+                            <label for="TxtNewTel" class="form-label">
+                                Teléfono celular
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </span>
+
+                                <input type="tel"
+                                       class="form-control"
+                                       id="TxtNewTel"
+                                       placeholder="10 caracteres (solo números)"
+                                       pattern="[0-9]*"
+                                       required />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- TERMINOS -->
+                        <div class="terms-container">
+
+                            <div class="form-check">
+
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="chkTerminos" />
+
+                                <label class="form-check-label" for="chkTerminos">
+
+                                    Acepto los
+
+                                    <a asp-area=""
+                                       asp-controller="Home"
+                                       asp-action="Privacy"
+                                       id="lnkTerminos"
+                                       target="_blank">
+                                        Términos y Condiciones
+                                    </a>
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ERROR TERMINOS -->
+                        <span id="msgTerminos" class="terms-error d-none">
+                            Debes abrir y aceptar los Términos y Condiciones
+                        </span>
+
+
+                        <!-- BOTONES -->
+                        <div class="LoginButtons">
+
+                            <button type="button"
+                                    class="btn btn-login"
+                                    id="btnRegistrar">
+
+                                <i class="fas fa-user-plus me-2"></i>
+
+                                Registrarse
+
+                            </button>
+
+
+                            <button type="button"
+                                    class="btn btn-back"
+                                    id="btnBackIndex2">
+
+                                <i class="fas fa-undo me-2"></i>
+
+                                Regresar
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
             </div>
-            <div class="login-body">
-                @* <h3 class="text-center mb-4" style="color: #333;">Iniciar Sesión</h3> *@
-                <form autocomplete="off" id="loginForm">
-                    <div class="mb-3">
-                        <label for="TxtCorreo" class="form-label" style="font-weight: 500;">Usuario:</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-user" style="color: #666;"></i>
-                            </span>
-                            <input type="text" class="form-control" id="TxtNewUser" placeholder="Nombre de Usuario (No debe tener espacios)" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="TxtPassW" class="form-label" style="font-weight: 500;">Contraseña:</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock" style="color: #666;"></i>
-                            </span>
-                            <input type="password" class="form-control" id="TxtPassW" placeholder="debe contener 8 caracteres minimo un numero y una letra" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="TxtPassWConfrim" class="form-label" style="font-weight: 500;">Confirmar Contraseña:</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-lock" style="color: #666;"></i>
-                            </span>
-                            <input type="password" class="form-control" id="TxtPassWConfrim" placeholder="debe contener 8 caracteres minimo un numero y una letra" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="TxtCorreo" class="form-label" style="font-weight: 500;">Correo:</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-envelope" style="color: #666;"></i>
-                            </span>
-                            <input type="email" class="form-control" id="TxtMail" placeholder="ejemplo@gmail.com" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="TxtCorreo" class="form-label" style="font-weight: 500;">Confirmar correo:</label>
-                        <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="fas fa-envelope" style="color: #666;"></i>
-                            </span>
-                            <input type="email" class="form-control" id="TxtMailConfirm" placeholder="ejemplo@gmail.com" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="TxtTel" class="form-label" style="font-weight: 500;">Telefono Celular</label>
-                        <div class="input-group">
-                            <span class="input-group-text"> 
-                                <i class="fas fa-mobile-alt" style="color: #666;"></i>
-                            </span>
-                            <input type="tel" class="form-control" id="TxtNewTel" placeholder="10 CARACTRERES (Solo Numeros)" pattern="[0-9]*" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group form-check mt-3 mb-3">
-                        <input type="checkbox"
-                               class="form-check-input"
-                               id="chkTerminos"
-                                />
-
-                        <label class="form-check-label" for="chkTerminos">
-                            Acepto los
-                            @* <a href="~/docs/TerminosYCondiciones.pdf"
-                               target="_blank"
-                               id="lnkTerminos"
-                               class="text-primary text-decoration-underline">
-                                Términos y Condiciones
-                            </a> *@
-                            <a asp-area="" asp-controller="Home" asp-action="Privacy" id="lnkTerminos"
-                               class="text-primary text-decoration-underline" target="_blank">Términos y Condiciones</a>
-                        </label>
-                    </div>
-
-                    <span id="msgTerminos" class="text-danger d-none">
-                        Debes abrir y aceptar los Términos y Condiciones
-                    </span>
 
 
-                    <button type="button" class="btn btn-login w-100 text-white" id="btnRegistrar">
-                        <i class="fas fa-user-plus me-2"></i>registrarse
-                    </button>
-                    
-                    <button type="button" class="btn btn-login w-100 text-white mt-3 mb-3" id="btnBackIndex2">
-                        <i class="fas fa-undo me-2"></i>Regresar
-                    </button>
-                </form>
+            <!-- FOOTER -->
+            <div class="security-footer">
+
+                <i class="fas fa-shield-alt me-1"></i>
+
+                Tu información se mantiene protegida.
+
             </div>
+
         </div>
-    </div>
+
+    </main>
+
+
+    <!-- SCRIPTS -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="~/js/Login/Registrarse.js?v=@(DateTime.Now.Ticks)"></script>
+
 </body>
 </html>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="~/js/Login/Registrarse.js?v=@(DateTime.Now.Ticks)"></script>

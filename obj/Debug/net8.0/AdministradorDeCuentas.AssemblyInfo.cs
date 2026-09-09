@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AdministradorDeCuentas")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+60cf98a201338c2f8e44dd3c17505ef947a4f1f8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62dc0aca37eddf5124cd5a008ff2931353b09856")]
 [assembly: System.Reflection.AssemblyProductAttribute("AdministradorDeCuentas")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AdministradorDeCuentas")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

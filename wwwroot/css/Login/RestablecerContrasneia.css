@@ -1,18 +1,19 @@
-﻿:root {
-    /* Identidad Institucional */
+﻿
+:root {
+    /* =========================================================
+       IDENTIDAD INSTITUCIONAL
+       ========================================================= */
+
     --color-gob-guinda: #691C32;
     --color-gob-guinda-dark: #4D1222;
     --color-gob-dorado: #BC955C;
     --color-gob-dorado-light: #F7F3EC;
-    /* Colores generales */
     --color-bg-light: #F1F3F5;
     --color-white: #FFFFFF;
     --color-text-main: #2D3748;
     --color-text-secondary: #6C757D;
-    /* Inputs */
     --input-border: #D5D9DE;
     --input-bg: #FFFFFF;
-    /* Focus */
     --focus-glow: rgba(188, 149, 92, 0.22);
 }
 
@@ -34,7 +35,7 @@ body {
    CONTENEDOR PRINCIPAL
    ========================================================= */
 
-.register-page {
+.update-page {
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -44,15 +45,15 @@ body {
 }
 
 
-.register-wrapper {
+.update-wrapper {
     width: 100%;
-    max-width: 520px;
+    max-width: 500px;
     margin: 0 auto;
 }
 
 
 /* =========================================================
-   CARD
+   TARJETA
    ========================================================= */
 
 .login-container {
@@ -78,7 +79,9 @@ body {
 }
 
 
-/* Icono */
+/* =========================================================
+   ICONO
+   ========================================================= */
 
 .security-icon {
     width: 58px;
@@ -95,7 +98,9 @@ body {
 }
 
 
-/* Titulo */
+/* =========================================================
+   TITULO
+   ========================================================= */
 
 .login-header h2 {
     margin: 0;
@@ -106,7 +111,9 @@ body {
 }
 
 
-/* Subtitulo */
+/* =========================================================
+   DESCRIPCIÓN
+   ========================================================= */
 
 .login-header p {
     margin: 0.65rem auto 0;
@@ -149,8 +156,6 @@ body {
 }
 
 
-/* Icono */
-
 .input-group-text {
     min-width: 48px;
     display: flex;
@@ -166,7 +171,9 @@ body {
 }
 
 
-/* Input */
+/* =========================================================
+   INPUT
+   ========================================================= */
 
 .form-control {
     background-color: var(--input-bg) !important;
@@ -182,15 +189,15 @@ body {
 }
 
 
-    /* Placeholder */
-
     .form-control::placeholder {
         color: #9AA0A6 !important;
-        font-size: 0.84rem;
+        font-size: 0.86rem;
     }
 
 
-    /* Focus */
+    /* =========================================================
+   FOCUS
+   ========================================================= */
 
     .form-control:focus {
         background-color: #FFFFFF !important;
@@ -200,9 +207,8 @@ body {
     }
 
 
-/* Icono cuando el input tiene focus */
-
-.input-group:focus-within .input-group-text {
+.input-group:focus-within
+.input-group-text {
     background-color: var(--color-gob-dorado-light) !important;
     border-color: var(--color-gob-dorado) !important;
     color: var(--color-gob-guinda) !important;
@@ -210,11 +216,11 @@ body {
 
 
 /* =========================================================
-   TERMINOS Y CONDICIONES
+   VALIDACIÓN ROBOT
    ========================================================= */
 
-.terms-container {
-    padding: 0.9rem 1rem;
+.robot-container {
+    padding: 0.85rem 1rem;
     background-color: #F8F9FA;
     border: 1px solid #E1E4E8;
     border-radius: 9px;
@@ -222,12 +228,10 @@ body {
 }
 
 
-    .terms-container:hover {
+    .robot-container:hover {
         border-color: var(--color-gob-dorado);
     }
 
-
-/* Checkbox */
 
 .form-check {
     margin: 0;
@@ -243,23 +247,17 @@ body {
 }
 
 
-    /* Checkbox seleccionado */
-
     .form-check-input:checked {
         background-color: var(--color-gob-guinda);
         border-color: var(--color-gob-guinda);
     }
 
 
-    /* Focus */
-
     .form-check-input:focus {
         border-color: var(--color-gob-dorado);
         box-shadow: 0 0 0 4px var(--focus-glow);
     }
 
-
-/* Texto */
 
 .form-check-label {
     color: var(--color-text-main);
@@ -269,26 +267,16 @@ body {
 }
 
 
-    /* Link */
-
-    .form-check-label a {
-        color: var(--color-gob-guinda) !important;
-        font-weight: 600;
-        text-decoration: underline !important;
-        text-decoration-color: var(--color-gob-dorado) !important;
-        text-underline-offset: 2px;
-        transition: all 0.2s ease;
+    .form-check-label i {
+        color: var(--color-gob-dorado);
     }
 
 
-        .form-check-label a:hover {
-            color: var(--color-gob-guinda-dark) !important;
-        }
+/* =========================================================
+   ERROR ROBOT
+   ========================================================= */
 
-
-/* Error */
-
-.terms-error {
+.robot-error {
     display: block;
     margin-top: 0.45rem;
     color: #B42318 !important;
@@ -308,52 +296,8 @@ body {
 }
 
 
-/* Botón registrar */
-
-.btn-login {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.82rem 1rem;
-    background-color: var(--color-gob-guinda) !important;
-    border: 1px solid var(--color-gob-guinda) !important;
-    color: #FFFFFF !important;
-    font-size: 0.92rem;
-    font-weight: 600;
-    border-radius: 9px;
-    box-shadow: 0 4px 12px rgba(105, 28, 50, 0.22);
-    transition: all 0.2s ease;
-}
-
-
-    /* Forzar texto e icono blanco */
-
-    .btn-login,
-    .btn-login i,
-    .btn-login:hover,
-    .btn-login:focus,
-    .btn-login:active {
-        color: #FFFFFF !important;
-    }
-
-
-        /* Hover */
-
-        .btn-login:hover {
-            background-color: var(--color-gob-guinda-dark) !important;
-            border-color: var(--color-gob-guinda-dark) !important;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(105, 28, 50, 0.30);
-        }
-
-
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-
 /* =========================================================
-   BOTON REGRESAR
+   BOTÓN REGRESAR
    ========================================================= */
 
 .btn-back {
@@ -371,14 +315,10 @@ body {
 }
 
 
-    /* Icono */
-
     .btn-back i {
         color: var(--color-gob-guinda) !important;
     }
 
-
-    /* Hover */
 
     .btn-back:hover {
         background-color: #F8F9FA !important;
@@ -386,6 +326,50 @@ body {
         color: var(--color-gob-guinda) !important;
         transform: translateY(-1px);
     }
+
+
+/* =========================================================
+   BOTÓN CONTINUAR
+   ========================================================= */
+
+.btn-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.82rem 1rem;
+    background-color: var(--color-gob-guinda) !important;
+    border: 1px solid var(--color-gob-guinda) !important;
+    color: #FFFFFF !important;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(105, 28, 50, 0.22);
+    transition: all 0.2s ease;
+}
+
+
+    /* Evita que Bootstrap cambie el texto */
+
+    .btn-login,
+    .btn-login i,
+    .btn-login:hover,
+    .btn-login:focus,
+    .btn-login:active {
+        color: #FFFFFF !important;
+    }
+
+
+        .btn-login:hover {
+            background-color: var(--color-gob-guinda-dark) !important;
+            border-color: var(--color-gob-guinda-dark) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(105, 28, 50, 0.30);
+        }
+
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
 
 
 /* =========================================================
@@ -411,13 +395,13 @@ body {
 
 @media (max-width: 576px) {
 
-    .register-page {
+    .update-page {
         align-items: flex-start;
         padding: 1rem 0.75rem;
     }
 
 
-    .register-wrapper {
+    .update-wrapper {
         margin-top: 0.5rem;
     }
 
@@ -454,28 +438,26 @@ body {
     }
 
 
-    /* Botones uno debajo del otro */
-
     .LoginButtons {
         grid-template-columns: 1fr;
         gap: 0.65rem;
     }
 
 
-    /* Registrar primero */
+    .btn-back {
+        order: 2;
+    }
+
 
     .btn-login {
         order: 1;
     }
-
-
-    /* Regresar después */
-
-    .btn-back {
-        order: 2;
-    }
 }
 
+
+/* =========================================================
+   PANTALLAS MUY PEQUEÑAS
+   ========================================================= */
 
 @media (max-width: 360px) {
 
@@ -490,6 +472,8 @@ body {
 
 
         .form-control::placeholder {
-            font-size: 0.76rem;
+            font-size: 0.78rem;
         }
 }
+
+

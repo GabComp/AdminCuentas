@@ -1,8 +1,11 @@
 wwwroot\Archivos\fundamento_recibo.pdf
 wwwroot\css\AdministrarCuentas\AdministradorDeCuentas.css
+wwwroot\css\Login\ActualizarDatos.css
 wwwroot\css\Login\Login.css
 wwwroot\css\Login\Privacy.css
 wwwroot\css\Login\Registro.css
+wwwroot\css\Login\RestablecerContrasneia.css
+wwwroot\css\menuprincipal.css
 wwwroot\css\PagoLinea\PagoLinea.css
 wwwroot\css\Recibos\RecibosUsuario.css
 wwwroot\css\site.css

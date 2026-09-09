@@ -1,0 +1,219 @@
+﻿```css
+:root {
+    /* Identidad Institucional */
+    --color-gob-guinda: #691C32;
+    --color-gob-guinda-dark: #4D1222;
+    --color-gob-dorado: #BC955C;
+    --color-gob-dorado-light: #F7F3EC;
+    --color-text-main: #2D3748;
+    --color-bg-light: #F8F9FA;
+    --text-dark: #333333;
+    --color-white: #FFFFFF;
+    --focus-glow: rgba(188, 149, 92, 0.25);
+    /* Tema */
+    --bg-body: var(--color-bg-light);
+    --bg-form-section: var(--color-white);
+    --text-primary: var(--color-text-main);
+    --text-secondary: #6c757d;
+    --input-bg: var(--color-white);
+    --input-border: #dee2e6;
+    --input-text: var(--text-dark);
+    --input-icon: #6c757d;
+    --border-color: #f1f3f5;
+}
+
+
+/* =========================================================
+   CONTENEDOR PRINCIPAL
+   ========================================================= */
+
+.update-wrapper {
+    width: 100%;
+    max-width: 520px;
+    /*
+       El formulario se centra horizontalmente,
+       pero no obliga al body completo a tener 100vh.
+    */
+    margin: 2rem auto;
+    padding: 0 1rem;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TARJETA
+   ========================================================= */
+
+.login-container {
+    width: 100%;
+    background-color: var(--bg-form-section);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(105, 28, 50, 0.08);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+
+/* =========================================================
+   HEADER DEL FORMULARIO
+   ========================================================= */
+
+.login-header {
+    background-color: var(--color-gob-guinda);
+    color: var(--color-white);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+    border-bottom: 4px solid var(--color-gob-dorado);
+}
+
+    .login-header h2 {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+
+/* =========================================================
+   CUERPO
+   ========================================================= */
+
+.login-body {
+    padding: 2.5rem 2rem;
+}
+
+
+/* =========================================================
+   LABELS
+   ========================================================= */
+
+.form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.input-group-text {
+    background-color: var(--color-bg-light);
+    border: 1px solid var(--input-border);
+    color: var(--input-icon);
+    border-right: none;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+
+.form-control {
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    padding: 0.75rem 1rem;
+    /* Corregido: antes decía 0.95krem */
+    font-size: 0.95rem;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-left: none;
+}
+
+
+    /* =========================================================
+   FOCUS
+   ========================================================= */
+
+    .form-control:focus {
+        background-color: var(--input-bg);
+        border-color: var(--color-gob-dorado);
+        color: var(--input-text);
+        box-shadow: 0 0 0 4px var(--focus-glow);
+    }
+
+
+.input-group:focus-within .input-group-text {
+    border-color: var(--color-gob-dorado);
+    background-color: var(--color-gob-dorado-light);
+    color: var(--color-gob-guinda);
+}
+
+
+.input-group:focus-within .form-control {
+    border-color: var(--color-gob-dorado);
+}
+
+
+/* =========================================================
+   BOTÓN PRINCIPAL
+   ========================================================= */
+
+.btn-login {
+    background-color: var(--color-gob-guinda);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 12px rgba(105, 28, 50, 0.2);
+}
+
+
+    .btn-login:hover {
+        background-color: var(--color-gob-guinda-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(105, 28, 50, 0.3);
+    }
+
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
+
+
+/* =========================================================
+   BOTÓN CERRAR SESIÓN
+   ========================================================= */
+
+#btnLogOut {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--input-border);
+    box-shadow: none;
+}
+
+
+    #btnLogOut:hover {
+        background-color: var(--color-bg-light);
+        color: var(--color-gob-guinda-dark);
+        border-color: var(--color-gob-guinda-dark);
+    }
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 576px) {
+
+    .update-wrapper {
+        margin: 1rem auto;
+        padding: 0 0.75rem;
+    }
+
+    .login-body {
+        padding: 1.5rem 1rem;
+    }
+
+    .login-header {
+        padding: 1.5rem 1rem;
+    }
+
+        .login-header h2 {
+            font-size: 1.4rem;
+        }
+}

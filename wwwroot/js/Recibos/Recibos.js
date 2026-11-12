@@ -27,7 +27,6 @@ let option = 0;
 $(document).ready(function () {
     LoginRecibos();
     ObtenerCuentasRecibosUsuario();
-
 });
 
 //eventos

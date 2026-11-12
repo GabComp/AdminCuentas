@@ -1,44 +1,186 @@
-﻿@{
-    ViewBag.Title = "Pago por Cuenta";
+﻿
+@{
+    ViewData["Title"] = "Pago en línea";
 }
-<link rel="stylesheet" href="../css/PagoLinea/PagoLinea.css" asp-append-version="true" />
 
-<div class="container py-5">
+<style>
+    .contenedor {
+        position: relative;
+        overflow: hidden;
+    }
 
-    <div class="row justify-content-center">
-        <div class="col-lg-7 col-md-9">
+    /* Div que ya está visible */
+    .div-visible {
+        position: relative;
+        z-index: 2;
+    }
 
-            <!-- Pago -->
-            <div class="mb-5">
+    /* Nuevo div */
+    .fade-in {
+        /* position: absolute; */
+        /* top: 0; */
+        /* left: 0; */
+        /* width: 100%; */
+        z-index: 1;
+        animation: salirDeAtras 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
 
-                <h1 class="titulo-principal">
-                    Paga solo con tu cuenta
-                </h1>
+    @@keyframes salirDeAtras {
 
-                <p class="texto-descripcion">
-                    Pague su recibo de manera fácil, rápida e inmediata solamente
-                    con su número de cuenta.
-                </p>
+        0% {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
 
-                <div class="mt-4">
-                    <label class="form-label etiqueta">
-                        Cuenta:
-                    </label>
+        30% {
+            opacity: 0.2;
+        }
 
-                    <input type="text"
-                           class="form-control input-cuenta"
-                           placeholder=""
-                           maxlength="12" />
+        50% {
+            opacity: 0.5;
+            /* transform: translateX(-35%); */
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .fade-out {
+        animation: fadeOutLeft 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @@keyframes fadeOutLeft {
+        0% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        30% {
+            opacity: 0.5;
+        }
+
+        50% {
+            opacity: 0.2;
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
+    }
+</style>
+
+<!-- Se utiliza page-header para el título principal con fondo guinda institucional -->
+<div class="page-header text-center">
+    <div class="container">
+        <h1>PAGO EN LÍNEA</h1>
+    </div>
+</div>
+
+<div class="container content-section">
+    <!-- Cambiado a row para permitir 2 columnas lado a lado -->
+    <div class="row justify-content-center g-4">
+
+        <!-- Tarjeta 1: Datos Generales -->
+        <div class="col-md-6 col-lg-6" id="divCuenta">
+            <div class="card shadow-sm border-0 mt-2">
+
+                <!-- La clase bg-danger es sobreescrita en site.css para aplicar el color guinda -->
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0" style="font-family: var(--font-heading); font-weight: 600;">Datos generales</h5>
                 </div>
 
-                <div class="mt-3">
-                    <button class="btn btn-pagar">
-                        Pagar
-                    </button>
+                <div class="card-body p-4 bg-light">
+                    <div class="mb-3">
+                        <label for="txtCuenta" class="form-label text-dark fw-bold">No de Cuenta:</label>
+                        <input type="text"
+                               id="txtCuenta"
+                               class="form-control form-control-lg"
+                               autocomplete="off" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="txtNombre" class="form-label text-dark fw-bold">Nombre:</label>
+                        <input type="text"
+                               id="txtNombre"
+                               class="form-control form-control-lg bg-white"
+                               style="background: #E9ECEF !important;"
+                               disabled />
+                    </div>
+
+                    <div class="d-grid mt-3">
+                        <!-- btn-primary toma la tipografía Montserrat y los colores de site.css -->
+                        <button type="button"
+                                id="btnConsulta"
+                                class="btn btn-primary border-0 w-100 d-flex justify-content-center align-items-center gap-2">
+                            CONSULTA ADEUDO
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
                 </div>
+
+                @* <div class="card-footer bg-white border-0 text-center pb-4 pt-3">
+                    <!-- callout-box le da un acento visual con el borde lateral guinda -->
+                    <div class="callout-box d-flex justify-content-center mt-0 mb-4 py-3 px-4 shadow-sm">
+                        <p class="mb-0 text-muted" style="font-size: 0.95rem;">
+                            Presione el botón <strong>"Consulta"</strong> para ver su adeudo
+                        </p>
+                    </div>
+                </div> *@
 
             </div>
         </div>
-    </div>
 
+        <!-- Tarjeta 2: Saldo Pendiente (Oculta por defecto mediante 'd-none') -->
+        <div class="col-md-6 col-lg-6 d-none fade-in" id="divSaldoPendiente">
+            <div class="card shadow-sm border-0 mt-2">
+
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0" style="font-family: var(--font-heading); font-weight: 600;">Saldo pendiente</h5>
+                </div>
+
+                <div class="card-body p-4 bg-light text-center">
+
+                    <!-- Monto a pagar -->
+                    <h4 class="fw-bold text-dark my-3" style="font-family: var(--font-heading);">
+                        TOTAL A PAGAR: <span class="text-danger fw-bold">$29,887.00</span>
+                    </h4>
+
+                    <!-- Sección de Imagen / Logos de Banamex -->
+                    <div class="my-4 py-3 px-2 bg-white rounded border d-flex justify-content-center align-items-center">
+                        <img src="~/images/banamex-payments.png" alt="Servicios de Pago Banamex" class="img-fluid" style="max-height: 70px;" />
+                    </div>
+
+                    <hr class="my-4 text-muted opacity-25" />
+
+                    <!-- Botones Pagar y Cancelar -->
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-success w-100 py-2 fw-bold d-flex justify-content-center align-items-center gap-2">
+                                <i class="fas fa-credit-card"></i> Pagar
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-danger w-100 py-2 fw-bold d-flex justify-content-center align-items-center gap-2" id="btnCancelar">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                                @* <div class="card-footer bg-white border-0 text-center pb-4 pt-3">
+                    <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                        Pago por servicio de agua potable
+                    </p>
+                </div> *@
+
+            </div>
+        </div>
+
+    </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/PagoEnLinea.js?v=@(DateTime.Now.Ticks)"></script>
+}

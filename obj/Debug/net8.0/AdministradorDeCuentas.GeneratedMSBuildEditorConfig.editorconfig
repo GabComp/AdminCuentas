@@ -1,11 +1,14 @@
 is_global = true
 build_property.TargetFramework = net8.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v8.0
 build_property.TargetPlatformMinVersion = 
 build_property.UsingMicrosoftNETSdkWeb = true
 build_property.ProjectTypeGuids = 
 build_property.InvariantGlobalization = 
 build_property.PlatformNeutralAssembly = 
 build_property.EnforceExtendedAnalyzerRules = 
+build_property.EntryPointFilePath = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = AdministradorDeCuentas
 build_property.RootNamespace = AdministradorDeCuentas
@@ -22,6 +25,10 @@ build_property.EnableCodeStyleSeverity =
 
 [C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/AdministradorDeCuentas/AdministradorDeCuentas.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWRtaW5pc3RyYWRvckRlQ3VlbnRhc1xBZG1pbmlzdHJhZG9yRGVDdWVudGFzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/HojaAdeudo/HojaAdeudo.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9qYUFkZXVkb1xIb2phQWRldWRvLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Admin/Documents/proyectos de prueba/AdministradorDeCuentas/Views/Home/ActualizarDatos.cshtml]

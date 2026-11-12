@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Documentos Disponibles";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="~/css/Recibos/RecibosUsuario.css" rel="stylesheet" />
+</head>
+<style>
+    .document-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: flex-start;
+    }
+
+    .document-card {
+        flex: 0 0 100%; /* En móvil, ocupa todo el ancho */
+        max-width: 100%;
+        /* resto de estilos */
+    }
+
+    /* En tablet y escritorio */
+    @@media (min-width: 576px) {
+        .document-card {
+            flex: 0 0 calc(50% - 1rem);
+            max-width: calc(50% - 1rem);
+        }
+    }
+
+    @@media (min-width: 992px) {
+        .document-card {
+            flex: 0 0 calc(33.333% - 1rem);
+            max-width: calc(33.333% - 1rem);
+        }
+    }
+</style>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>Tramitar Constancia de no Adeudo</h1>
+            
+        </div>
+    </header>
+
+   @*  <ul style="list-style: none;">
+        <p>Asegurate de contar con todos los rquisitos</p>
+        <li>1 - Estar al corriente con  sus pagos, (Sin traslado de saldo)</li>
+        <li>2 -	COPIA DE IDENTIFICACION OFICIAL DEL PROPIETARIO</li>
+        <li>3-	EN CASO DE QUE EL CONTRATO NO ESTE A SU NOMBRE ACREDITAR LA PROPIEDAD (COPIA DE ESCRITURAS O SENTENCIA ACREDITANDOLO COMO ALBACEA).</li>
+        <li>4-	EN CASO DE QUE OTRA PERSONA SE PRESENTE A SOLICITARLA DEBERA PRESENTAR COPIA DE IDENTIFICACION OFICIAL Y UNA CARTA PODER SIMPLE.</li>
+        <li>5-	FORMATO DE SOLICITUD LLENO, YA SEA PARA NOTARIO O A QUIEN CORRESPONDA.</li>
+        <li>6-	EL COSTO DEL TRAMITE ES DE $204.00</li>
+        <li>7-	LA TOMA DEBERA CONTAR CON MEDIDOR EN BUEN FUNCIONAMIENTO.</li>
+    </ul> *@
+
+    <main class="container">
+        <!-- Opción para cambiar entre vista de lista o tarjetas -->
+        <div class="row align-items-end gy-3 justify-content-between mb-2">
+            <!-- Select: ocupa todo el ancho en móvil (col-12) y 3-4 columnas en escritorio (col-md-4 o col-md-3) -->
+            <div class="col-12 col-md-4">
+                <label for="SelectCuentaHojaAdeudo" class="form-label">Selecciona una cuenta:</label>
+                <select id="SelectCuentaHojaAdeudo" class="form-select">
+                    <option value="0">Selecciona un numero de cuenta</option>
+                </select>
+            </div>
+
+            <!-- Botones: en móvil se alinean al centro, en escritorio a la derecha -->
+            <div class="col-12 col-md-auto d-flex gap-2 justify-content-center justify-content-md-end" id="divButtonDownload" style="display:none;">
+                <button class="toggle-btn active" id="BtnDownload">
+                    @* <i class="fas fa-file-download"></i> *@
+                    <span>Pagar documento</span>
+                </button>
+            </div>
+        </div>
+        <hr />
+
+    </main>
+
+    @section Scripts {
+        @* <script src="~/js/Recibos/Recibos.js?v=@(DateTime.Now.Ticks)"></script> *@
+        <script src="~/js/HojaAdeudo/HojaAdeudo.js?v=@(DateTime.Now.Ticks)"></script>
+
+    }
+
+</body>
+</html>

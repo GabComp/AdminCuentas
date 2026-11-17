@@ -35,3 +35,12 @@ C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\bin\Debug\ne
 C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\AdministradorDeCuentas.csproj.AssemblyReference.cache
 C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\Administ.C7A61E60.Up2Date
 C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\AdministradorDeCuentas.sourcelink.json
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\bin\Debug\net8.0\AdministradorDeCuentas.runtimeconfig.dev.json
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\HotReload\Microsoft.NET.Sdk.BlazorWeb.HotReload.lib.module.js
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\HotReload\Microsoft.NET.Sdk.BlazorWeb.HotReload.BrowserTools.js
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\HotReload\Microsoft.NET.Sdk.BlazorWeb.HotReload.BrowserTools.Config.js
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\HotReload\browser-tools-key.public.json
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\HotReload\browser-tools-key.private.json
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\jsmodules\jsmodules.build.manifest.json
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\scopedcss\scopedcss.cache
+C:\Users\Admin\Documents\proyectos de prueba\AdministradorDeCuentas\obj\Debug\net8.0\swae.build.ex.cache

@@ -11,19 +11,23 @@
     <!-- BOTONES -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex flex-wrap gap-3 justify-content-center">
+            <!-- Limitamos el contenedor para que no abarquen toda la pantalla en monitores grandes -->
+            <div class="row g-3 justify-content-center mx-auto" style="max-width: 600px;">
 
-                <button class="btn btn-principal btn-lg px-4"
-                        id="btnMostrarTabla">
-                    <i class="fas fa-table me-2"></i>
-                    Administrar Mis Cuentas
-                </button>
+                <div class="col-12 col-md-6">
+                    <!-- w-100 hace que el botón llene la columna -->
+                    <button class="btn btn-principal btn-lg w-100" id="btnMostrarTabla">
+                        <i class="fas fa-table me-2"></i>
+                        Administrar Mis Cuentas
+                    </button>
+                </div>
 
-                <button class="btn btn-outline-secondary btn-lg px-4"
-                        id="btnMostrarRegistro">
-                    <i class="fas fa-plus-circle me-2"></i>
-                    Registrar Cuenta
-                </button>
+                <div class="col-12 col-md-6">
+                    <button class="btn btn-outline-secondary btn-lg w-100" id="btnMostrarRegistro">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Registrar Cuenta
+                    </button>
+                </div>
 
             </div>
         </div>

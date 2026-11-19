@@ -29,12 +29,16 @@ namespace PrototipoComapa.Models.UsuarioWeb
         {
             [JsonPropertyName("mensaje")]
             public string mensaje { get; set; }
+
             [JsonPropertyName("mensaje2")]
             public string mensaje2 { get; set; }
+
             [JsonPropertyName("mensaje3")]
             public string mensaje3 { get; set; }
+
             [JsonPropertyName("NOMBRE")]
             public string NOMBRE { get; set; }
+
             [JsonPropertyName("CORREO")]
             public string CORREO { get; set; }
         }

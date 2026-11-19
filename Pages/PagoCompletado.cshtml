@@ -1,0 +1,115 @@
+@page "/pago-en-linea/comprobante"
+@using System.Globalization
+@using AdministradorDeCuentas.Pages
+@model PagoCompletadoModel
+@{
+    ViewData["Title"] = "Pago aplicado";
+    ViewData["Description"] = "Comprobante del pago en línea de COMAPA Victoria.";
+}
+
+<style>
+    @@media print {
+        header.header-comapa,
+        footer.main-footer,
+        #btnSubir,
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background: #fff !important;
+        }
+
+        .comprobante-card {
+            box-shadow: none !important;
+            border: 1px solid #dee2e6 !important;
+        }
+    }
+</style>
+
+<section class="page-header text-center">
+    <div class="container">
+        <div class="breadcrumb">
+            <a asp-page="/Index">Inicio</a> / <a asp-page="/pago-en-linea">Pago en línea</a> / <span>Comprobante</span>
+        </div>
+        <h1>Pago aplicado</h1>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="container" style="max-width: 780px;">
+        <div class="card shadow-sm border-0 comprobante-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="display-4 text-success mb-2">
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+                    <h2 class="h3 mb-1" style="font-family: var(--font-heading); color: var(--color-gob-guinda);">
+                        Pago registrado correctamente
+                    </h2>
+                    <p class="text-muted mb-0">Conserva este comprobante como referencia de tu pago.</p>
+                </div>
+
+                <div class="alert alert-success text-center" role="status">
+                    Folio: <strong>@Model.Pago!.Folio</strong>
+                </div>
+
+                @if (Model.Pago.Contingencia)
+                {
+                    <div class="alert alert-warning text-center" role="alert">
+                        <i class="fas fa-clock me-1"></i>
+                        Pago registrado en <strong>modo contingencia</strong>.
+                        Se aplicará al sistema comercial en las próximas horas.
+                        Conserva este comprobante.
+                    </div>
+                }
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Cuenta</dt>
+                    <dd class="col-sm-8">@Model.Pago.Cuenta</dd>
+
+                    <dt class="col-sm-4">Titular</dt>
+                    <dd class="col-sm-8">@Model.Pago.Nombre</dd>
+
+                    <dt class="col-sm-4">Importe pagado</dt>
+                    <dd class="col-sm-8 fw-bold text-success">
+                        @Model.Pago.Importe.ToString("C", new CultureInfo("es-MX"))
+                    </dd>
+
+                    <dt class="col-sm-4">Fecha</dt>
+                    <dd class="col-sm-8">@Model.Pago.Fecha.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Pago.MarcaTarjeta) ||
+                         !string.IsNullOrWhiteSpace(Model.Pago.UltimosDigitos))
+                    {
+                        <dt class="col-sm-4">Tarjeta</dt>
+                        <dd class="col-sm-8">
+                            @Model.Pago.MarcaTarjeta
+                            @if (!string.IsNullOrWhiteSpace(Model.Pago.UltimosDigitos))
+                            {
+                                <text>···· @Model.Pago.UltimosDigitos</text>
+                            }
+                        </dd>
+                    }
+
+                    <dt class="col-sm-4">Orden</dt>
+                    <dd class="col-sm-8"><small class="text-muted">@Model.Pago.IdOrden</small></dd>
+                </dl>
+
+                <hr class="my-4" />
+
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 no-print">
+                    <button type="button" class="btn-primary" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i> Imprimir comprobante
+                    </button>
+                    <a asp-page="/pago-en-linea" class="btn-secondary">Nueva consulta</a>
+                    <a asp-page="/Index" class="btn-secondary">Volver al inicio</a>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center text-muted small mt-4 no-print">
+            Si detectas alguna diferencia, comunícate al <a href="tel:8343187200">(834) 318 7200</a>.
+        </p>
+    </div>
+</section>

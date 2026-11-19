@@ -1,0 +1,157 @@
+﻿:root {
+    /* Identidad Institucional */
+    --color-gob-guinda: #691C32;
+    --color-gob-guinda-dark: #4D1222;
+    --color-gob-dorado: #BC955C;
+    --color-gob-dorado-light: #F7F3EC;
+    --color-text-main: #2D3748;
+    --color-bg-light: #F8F9FA;
+    --text-dark: #333333;
+    --color-white: #FFFFFF;
+    /* Glow para focus con dorado transparente */
+    --focus-glow: rgba(188, 149, 92, 0.25);
+    /* Asignación de Tema (Claro por defecto) */
+    --bg-body: var(--color-bg-light);
+    --bg-form-section: var(--color-white);
+    --text-primary: var(--color-text-main);
+    --text-secondary: #6c757d;
+    --input-bg: var(--color-white);
+    --input-border: #dee2e6;
+    --input-text: var(--text-dark);
+    --input-icon: #adb5bd;
+    --border-color: #f1f3f5;
+    /* Variables específicas del menú basadas en tu paleta */
+    --menu-card-bg: var(--color-white);
+    --menu-card-border: var(--border-color);
+    --menu-sombra-suave: 0 4px 12px rgba(105, 28, 50, 0.05); /* Sombra sutil con tinte guinda */
+    --menu-sombra-hover: 0 12px 28px rgba(105, 28, 50, 0.12);
+}
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+}
+
+.menu-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* Título institucional con acento dorado */
+.menu-title {
+    text-align: center;
+    margin-bottom: 50px;
+    color: var(--color-gob-guinda);
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+    .menu-title::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 4px;
+        background-color: var(--color-gob-dorado);
+        margin: 15px auto 0;
+        border-radius: 2px;
+    }
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+/* Tarjetas usando las variables institucionales */
+.menu-card {
+    background: var(--menu-card-bg);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: 12px;
+    padding: 40px 30px;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--menu-sombra-suave);
+    border: 1px solid var(--menu-card-border);
+    border-bottom: 4px solid transparent;
+}
+
+    /* Efecto Hover: se eleva y destaca con el guinda institucional y brillo dorado */
+    .menu-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--menu-sombra-hover), 0 0 0 3px var(--focus-glow);
+        border-bottom: 4px solid var(--color-gob-guinda);
+        color: var(--text-primary);
+    }
+
+/* Contenedor circular para el ícono con tono ligero */
+.icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background-color: var(--color-gob-dorado-light);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px;
+    transition: background-color 0.3s ease;
+}
+
+/* Al pasar el cursor, el círculo cambia al guinda fuerte */
+.menu-card:hover .icon-wrapper {
+    background-color: var(--color-gob-guinda);
+}
+
+.menu-card i {
+    font-size: 2.2rem;
+    color: var(--color-gob-guinda);
+    transition: color 0.3s ease;
+}
+
+/* El ícono se vuelve blanco al hacer hover */
+.menu-card:hover i {
+    color: var(--color-white);
+}
+
+.menu-card span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .menu-title {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+    }
+
+    .menu-grid {
+        gap: 20px;
+    }
+
+    .menu-card {
+        padding: 30px 20px;
+        min-height: 180px;
+    }
+
+    .icon-wrapper {
+        width: 65px;
+        height: 65px;
+        margin-bottom: 15px;
+    }
+
+    .menu-card i {
+        font-size: 1.8rem;
+    }
+
+    .menu-card span {
+        font-size: 1.1rem;
+    }
+}

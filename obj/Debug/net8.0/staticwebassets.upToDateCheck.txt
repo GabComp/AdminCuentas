@@ -1,4 +1,5 @@
 wwwroot\Archivos\fundamento_recibo.pdf
+wwwroot\css\AdministrarCuentas\AdministradorDeCuentas.css
 wwwroot\css\Login\ActualizarDatos.css
 wwwroot\css\Login\Login.css
 wwwroot\css\Login\Privacy.css
@@ -80,4 +81,3 @@ wwwroot\lib\jquery\dist\jquery.js
 wwwroot\lib\jquery\dist\jquery.min.js
 wwwroot\lib\jquery\dist\jquery.min.map
 wwwroot\lib\jquery\LICENSE.txt
-wwwroot\css\AdministrarCuentas\AdministradorDeCuentas.css

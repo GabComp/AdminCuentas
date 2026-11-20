@@ -3,8 +3,21 @@ let divButtonDownload = $("#divButtonDownload");
 
 $(document).ready(function () {
     $("#divButtonDownload").removeClass("d-flex").addClass("d-none");
-    ObtenerCuentasHojaAdeudo();
+    AsegurarCuentasUsuario();
 });
+
+function AsegurarCuentasUsuario() {
+    $.ajax({
+        contentType: "application/json; charset=utf-8",
+        url: '/AdministradorDeCuentas/ConsultarCuentasUsuario',
+        type: "POST",
+        data: JSON.stringify({ ID_USUARIO_WEB: 0 }),
+        cache: false,
+        complete: function () {
+            ObtenerCuentasHojaAdeudo();
+        }
+    });
+}
 
 SelectCuentaHojaAdeudo.on('change', function () {
     let valor = this.value;
@@ -52,18 +65,16 @@ $("#BtnDownload").on("click", function () {
 
 function ObtenerCuentasHojaAdeudo() {
     $.ajax({
-        contentType: "application/json; charset=utf-8",
         url: '/Recibos/ObtenerCuentasRecibosUsuario',
-        type: "POST",
-        data: JSON.stringify(),
+        type: "GET",
         cache: false,
         success: function (data) {
-            if (data.length > 0) {
+            if (data && data.length > 0) {
                 CargarCuentasSelect('#SelectCuentaHojaAdeudo', data);
             }
         },
         error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
+            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL OBTENER LAS CUENTAS!`, icon: "error" });
         }
     });
 }

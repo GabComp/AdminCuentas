@@ -216,6 +216,22 @@
             });
     }
 
+    function limpiarAlmacenamientoEvo() {
+        // Solo se limpian claves relacionadas con la pasarela; no se borra
+        // todo el almacenamiento del origen.
+        try {
+            Object.keys(sessionStorage)
+                .filter(function (clave) { return /evo|checkout/i.test(clave); })
+                .forEach(function (clave) { sessionStorage.removeItem(clave); });
+
+            Object.keys(localStorage)
+                .filter(function (clave) { return /evo|checkout/i.test(clave); })
+                .forEach(function (clave) { localStorage.removeItem(clave); });
+        } catch (e) {
+            // Algunos navegadores pueden bloquear el almacenamiento.
+        }
+    }
+
     function cargarCheckoutEvo(scriptUrl) {
         return new Promise(function (resolve, reject) {
             const anterior = document.getElementById('evo-checkout-script');
@@ -299,13 +315,8 @@
         setPagoCargando(true);
 
         // EVO conserva la última sesión en el almacenamiento del navegador.
-        // Se limpia para que un nuevo intento no reutilice una orden ya pagada.
-        try {
-            sessionStorage.clear();
-            localStorage.clear();
-        } catch (e) {
-            // Algunos navegadores pueden bloquear el almacenamiento; no es bloqueante.
-        }
+        // Se limpian solo sus claves para no borrar datos de otros módulos.
+        limpiarAlmacenamientoEvo();
 
         $.ajax({
             url: apiIniciar,
@@ -390,12 +401,7 @@
             window.Checkout = undefined;
         }
 
-        try {
-            sessionStorage.clear();
-            localStorage.clear();
-        } catch (e) {
-            // Sin efecto si el navegador bloquea el almacenamiento.
-        }
+        limpiarAlmacenamientoEvo();
     });
 
     $('#btnConsulta').on('click', consultarAdeudo);

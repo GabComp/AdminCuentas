@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PrototipoComapa.Extensions;
 using PrototipoComapa.Utilerias;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -17,35 +19,35 @@ namespace PrototipoComapa.Controllers
         //private string ENDPOINT_API = "https://financiero.comapavictoria.gob.mx/";
         //private string ENDPOINT_API = "http://192.168.1.70:62863/api";
         private readonly ILogger<LoginController> _logger;
+        private readonly EmailService _emailService;
 
-        public LoginController(ILogger<LoginController> logger, IHttpClientFactory factory, IConfiguration configuration)
+        public LoginController(
+            ILogger<LoginController> logger,
+            IHttpClientFactory factory,
+            IConfiguration configuration,
+            EmailService emailService)
         {
             _logger = logger;
             _configuration = configuration;
+            _emailService = emailService;
             _ApiClient = factory.CreateClient("ApiGeneralClient");
         }
 
         [HttpPost]
-        public async Task<JsonResult> InicioSesion([FromBody] UsuarioWebRegistroRequest request)
+        [EnableRateLimiting("login")]
+        public async Task<JsonResult> InicioSesion([FromBody] UsuarioWebRegistroRequest? request)
         {
+            if (request is null ||
+                string.IsNullOrWhiteSpace(request.USUARIO) ||
+                string.IsNullOrWhiteSpace(request.CONTRASENIA))
+            {
+                return ErrorGenerico("Usuario y contraseña son requeridos.");
+            }
+
             try
             {
-                // Crear la solicitud para la API externa
-                if(string.IsNullOrEmpty(request.USUARIO) 
-                    || string.IsNullOrEmpty(request.CONTRASENIA)
-                    || string.IsNullOrEmpty(request.ACCION))
-                {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = "Usuario y contraseña son requeridos",
-                        Url = ""
-                    });
-                }
                 var apiRequest = new ApiRequest
                 {
-                    Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
-                    User = _configuration["ApiSettings:User"] ?? "tu_usuario_default",
                     Application = "LoginServicios",
                     TransactionList = new List<TransactionRequest>
                     {
@@ -56,8 +58,9 @@ namespace PrototipoComapa.Controllers
                             TransactionLog = true,
                             TransactionAttributes = new UsuarioWebRegistroRequest
                             {
-                                ACCION = request.ACCION,
-                                USUARIO = request.USUARIO,
+                                // El cliente no decide la acción: este endpoint solo autentica.
+                                ACCION = "ACCE",
+                                USUARIO = request.USUARIO.Trim(),
                                 CONTRASENIA = request.CONTRASENIA,
                                 CORREO_ELECTRONICO = request.CORREO_ELECTRONICO,
                                 TELEFONO_CEL = request.TELEFONO_CEL,
@@ -69,169 +72,175 @@ namespace PrototipoComapa.Controllers
                     }
                 };
 
-                Console.WriteLine(apiRequest);
-
                 var json = JsonSerializer.Serialize(apiRequest);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                // CORRECCIÓN: Usar la URL completa del endpoint
-                var response = await _ApiClient.PostAsync("API/Transaction", content);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var response = await _ApiClient.PostAsync("API/Transaction", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = $"Error en el servicio externo: {response.StatusCode} - {errorContent}",
-                    });
+                    _logger.LogWarning(
+                        "La API de login respondió {StatusCode} al autenticar.",
+                        (int)response.StatusCode);
+
+                    return ErrorGenerico("No fue posible iniciar sesión en este momento. Intenta de nuevo.");
                 }
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                // Log para debugging
-                Console.WriteLine($"Respuesta recibida: {responseContent}");
 
                 var apiResponse = JsonSerializer.Deserialize<ApiResponse>(responseContent);
 
-                // Validar respuesta
-                if (apiResponse == null)
+                if (apiResponse is null)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = "No se recibió respuesta del servicio",
-                        Url = ""
-                    });
+                    _logger.LogWarning("La API de login devolvió una respuesta vacía o inválida.");
+                    return ErrorGenerico("No fue posible iniciar sesión en este momento. Intenta de nuevo.");
                 }
 
                 if (apiResponse.ResponseCode != 1)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = apiResponse.ResponseMessage ?? "Error en el servicio externo",
-                        Url = ""
-                    });
+                    _logger.LogWarning(
+                        "La API de login rechazó la solicitud: {Mensaje}.",
+                        apiResponse.ResponseMessage);
+
+                    return ErrorGenerico("Usuario o contraseña incorrectos.");
                 }
 
-                if (apiResponse.TransactionResponses == null || apiResponse.TransactionResponses.Count == 0)
+                if (apiResponse.TransactionResponses is null || apiResponse.TransactionResponses.Count == 0)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = true,
-                        Datos = new List<objReponse>(),
-                        Mensaje = "No se encontraron documentos",
-                        Url = ""
-                    });
+                    return ErrorGenerico("Usuario o contraseña incorrectos.");
                 }
 
                 var transaction = apiResponse.TransactionResponses[0];
 
-                var usuarioSesion = transaction.TransactionResults?.FirstOrDefault();
-                var usuarioJson = JsonSerializer.Serialize(usuarioSesion);
-
-                HttpContext.Session.SetString("UsuarioSesion", usuarioJson);
-
+                // La sesión se crea únicamente cuando el backend confirmó el acceso.
                 if (transaction.TransactionStatus != 1)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = transaction.TransactionMessage ?? "Error en la transacción",
-                        Url = ""
-                    });
+                    _logger.LogWarning(
+                        "Inicio de sesión rechazado: {Mensaje}.",
+                        transaction.TransactionMessage);
+
+                    return ErrorGenerico("Usuario o contraseña incorrectos.");
                 }
 
-                var ID_USUARIO = transaction.TransactionResults.FirstOrDefault()?.mensaje ?? "";
-                HttpContext.Session.SetString("ID_USUARIO", ID_USUARIO);
+                var usuarioSesion = transaction.TransactionResults?.FirstOrDefault();
 
+                if (usuarioSesion is null)
+                {
+                    _logger.LogWarning("El login fue exitoso pero no devolvió datos de usuario.");
+                    return ErrorGenerico("No fue posible iniciar sesión en este momento. Intenta de nuevo.");
+                }
+
+                var idUsuario = usuarioSesion.mensaje ?? string.Empty;
+
+                if (!int.TryParse(idUsuario, out var idUsuarioNumerico) || idUsuarioNumerico <= 0)
+                {
+                    _logger.LogWarning("El login devolvió un ID_USUARIO no válido.");
+                    return ErrorGenerico("No fue posible iniciar sesión en este momento. Intenta de nuevo.");
+                }
+
+                // Se limpia cualquier estado previo antes de crear la sesión autenticada.
+                HttpContext.Session.Clear();
+                HttpContext.Session.SetString("UsuarioSesion", JsonSerializer.Serialize(usuarioSesion));
+                HttpContext.Session.SetString("ID_USUARIO", idUsuarioNumerico.ToString());
 
                 return Json(new UsuarioWebRegistroResponse
                 {
                     Exito = true,
                     Datos = transaction.TransactionResults ?? new List<objReponse>(),
-                    Mensaje = "Consulta exitosa",
-                    //User = usuarioResponse
+                    Mensaje = "Consulta exitosa"
                 });
             }
             catch (Exception ex)
             {
-                // Log detallado del error
-                Console.WriteLine($"Error completo: {ex}");
-                return Json(new UsuarioWebRegistroResponse
-                {
-                    Exito = false,
-                    Mensaje = $"Error interno: {ex.Message}"
-                });
+                _logger.LogError(ex, "Error inesperado al iniciar sesión.");
+                return ErrorGenerico("No fue posible iniciar sesión en este momento. Intenta de nuevo.");
             }
         }
 
-        //este metodo se utiliza para el registro, actualizacion y baja de usuarios, dependiendo de la accion que se envie en el request !!!
+        private static JsonResult ErrorGenerico(string mensaje) =>
+            new(new UsuarioWebRegistroResponse
+            {
+                Exito = false,
+                Mensaje = mensaje,
+                Url = ""
+            });
+
+        private static JsonResult RestablecimientoFallido() =>
+            new(new
+            {
+                exito = false,
+                mensaje = "No fue posible restablecer la contraseña. Intenta de nuevo."
+            });
+
+        // Este método atiende registro (ALTA) y actualización/baja de usuarios.
+        // La acción se valida contra una lista blanca y ACT/BAJA exigen sesión.
         [HttpPost]
-        public async Task<JsonResult> UsuarioWeb([FromBody] UsuarioWebRegistroRequest request) 
+        [EnableRateLimiting("registro")]
+        public async Task<JsonResult> UsuarioWeb([FromBody] UsuarioWebRegistroRequest? request)
         {
-            request.ID_USUARIO = HttpContext.Session.GetString("ID_USUARIO") ?? "";
+            if (request is null)
+            {
+                return ErrorGenerico("Solicitud inválida.");
+            }
+
+            var accion = (request.ACCION ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (accion is not ("ALTA" or "ACT" or "BAJA" or "CONTRA"))
+            {
+                return ErrorGenerico("Acción no permitida.");
+            }
+
+            var idUsuarioSesion = HttpContext.Session.GetString("ID_USUARIO") ?? string.Empty;
+
+            if (accion is "ACT" or "BAJA" &&
+                (!int.TryParse(idUsuarioSesion, out var idSesion) || idSesion <= 0))
+            {
+                return ErrorGenerico("La sesión expiró. Inicia sesión nuevamente.");
+            }
+
+            // Para ALTA el identificador lo asigna el backend; para ACT/BAJA
+            // se toma de la sesión y nunca del cuerpo de la petición.
+            request.ID_USUARIO = accion == "ALTA" ? string.Empty : idUsuarioSesion;
+
             try
             {
-                if(request.ACCION == "ALTA" || request.ACCION == "ACT")
+                if (accion == "CONTRA" &&
+                    (string.IsNullOrWhiteSpace(request.CODIGO) ||
+                     string.IsNullOrWhiteSpace(request.CONTRASENIA)))
                 {
-                    if (string.IsNullOrEmpty(request.USUARIO) || string.IsNullOrEmpty(request.CONTRASENIA))
-                    {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = "Usuario y contraseña son requeridos",
-                            Url = ""
-                        });
-                    }
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(request.CORREO_ELECTRONICO, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-                    {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = "El CORREO_ELECTRONICO no tiene un formato válido",
-                            Url = ""
-                        });
-                    }
-                    if (!System.Text.RegularExpressions.Regex.IsMatch(request.TELEFONO_CEL, @"^\d{10}$"))
-                    {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = "El CORREO_ELECTRONICO no tiene un formato válido",
-                            Url = ""
-                        });
-                    }
-                    if (!Regex.IsMatch(request.USUARIO, @"^[a-zA-Z]+$"))
-                    {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = "El Nombre Solo debe contener Letras",
-                            Url = ""
-                        });
-                    }
-                } else if(request.ACCION == "BAJA")
+                    return ErrorGenerico("El código y la nueva contraseña son requeridos.");
+                }
+
+                if (accion is "ALTA" or "ACT")
                 {
-                    if(request.ID_USUARIO == null || request.ID_USUARIO == "")
+                    if (string.IsNullOrWhiteSpace(request.USUARIO) ||
+                        string.IsNullOrWhiteSpace(request.CONTRASENIA))
                     {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = "El ID_USUARIO es requerido para la acción de BAJA",
-                            Url = ""
-                        });
+                        return ErrorGenerico("Usuario y contraseña son requeridos.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(request.CORREO_ELECTRONICO) ||
+                        request.CORREO_ELECTRONICO.Length > 254 ||
+                        !Regex.IsMatch(request.CORREO_ELECTRONICO, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                    {
+                        return ErrorGenerico("El correo electrónico no tiene un formato válido.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(request.TELEFONO_CEL) ||
+                        !Regex.IsMatch(request.TELEFONO_CEL, @"^\d{10}$"))
+                    {
+                        return ErrorGenerico("El teléfono debe contener 10 dígitos.");
+                    }
+
+                    if (request.USUARIO.Length > 100 ||
+                        !Regex.IsMatch(request.USUARIO, @"^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$"))
+                    {
+                        return ErrorGenerico("El nombre solo debe contener letras.");
                     }
                 }
 
-
-                    var apiRequest = new ApiRequest
-                    {
-                        Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
-                        User = _configuration["ApiSettings:User"] ?? "tu_usuario_default",
-                        Application = "LoginServicios",
-                        TransactionList = new List<TransactionRequest>
+                var apiRequest = new ApiRequest
+                {
+                    Application = "LoginServicios",
+                    TransactionList = new List<TransactionRequest>
                     {
                         new TransactionRequest
                         {
@@ -240,143 +249,124 @@ namespace PrototipoComapa.Controllers
                             TransactionLog = true,
                             TransactionAttributes = new UsuarioWebRegistroRequest
                             {
-                                ACCION = request.ACCION,
-                                USUARIO = request.USUARIO,
-                                CONTRASENIA = request.CONTRASENIA,
-                                CORREO_ELECTRONICO = request.CORREO_ELECTRONICO,
-                                TELEFONO_CEL = request.TELEFONO_CEL,
-                                MOTIVO_BAJA = request.MOTIVO_BAJA,
+                                ACCION = accion,
+                                USUARIO = request.USUARIO?.Trim() ?? string.Empty,
+                                CONTRASENIA = request.CONTRASENIA ?? string.Empty,
+                                CORREO_ELECTRONICO = request.CORREO_ELECTRONICO?.Trim() ?? string.Empty,
+                                TELEFONO_CEL = request.TELEFONO_CEL?.Trim() ?? string.Empty,
+                                MOTIVO_BAJA = request.MOTIVO_BAJA ?? string.Empty,
                                 ID_USUARIO = request.ID_USUARIO,
-                                CODIGO = request.CODIGO
+                                CODIGO = request.CODIGO ?? string.Empty
                             }
                         }
                     }
-                    };
-
-                Console.WriteLine(apiRequest);
+                };
 
                 var json = JsonSerializer.Serialize(apiRequest);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                // CORRECCIÓN: Usar la URL completa del endpoint
-                var response = await _ApiClient.PostAsync("API/Transaction", content);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var response = await _ApiClient.PostAsync("API/Transaction", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = $"Error en el servicio externo: {response.StatusCode} - {errorContent}",
-                    });
+                    _logger.LogWarning(
+                        "La API de usuarios respondió {StatusCode} para la acción {Accion}.",
+                        (int)response.StatusCode,
+                        accion);
+
+                    return ErrorGenerico("No fue posible completar la operación. Intenta de nuevo.");
                 }
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                // Log para debugging
-                Console.WriteLine($"Respuesta recibida: {responseContent}");
 
                 var apiResponse = JsonSerializer.Deserialize<ApiResponse>(responseContent);
 
-                // Validar respuesta
-                if (apiResponse == null)
+                if (apiResponse is null)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = "No se recibió respuesta del servicio",
-                        Url = ""
-                    });
+                    _logger.LogWarning("La API de usuarios devolvió una respuesta vacía o inválida.");
+                    return ErrorGenerico("No fue posible completar la operación. Intenta de nuevo.");
                 }
 
                 if (apiResponse.ResponseCode != 1)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = apiResponse.ResponseMessage ?? "Error en el servicio externo",
-                        Url = ""
-                    });
+                    _logger.LogWarning(
+                        "La API de usuarios rechazó la acción {Accion}: {Mensaje}.",
+                        accion,
+                        apiResponse.ResponseMessage);
+
+                    return ErrorGenerico(
+                        apiResponse.ResponseMessage ?? "No fue posible completar la operación.");
                 }
 
-                if (apiResponse.TransactionResponses == null || apiResponse.TransactionResponses.Count == 0)
+                if (apiResponse.TransactionResponses is null ||
+                    apiResponse.TransactionResponses.Count == 0)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = true,
-                        Datos = new List<objReponse>(),
-                        Mensaje = "No se encontraron documentos",
-                        Url = ""
-                    });
+                    return ErrorGenerico("No fue posible completar la operación. Intenta de nuevo.");
                 }
 
                 var transaction = apiResponse.TransactionResponses[0];
 
                 if (transaction.TransactionStatus != 1)
                 {
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = transaction.TransactionMessage ?? "Error en la transacción",
-                        Url = ""
-                    });
+                    _logger.LogWarning(
+                        "La transacción {Accion} falló: {Mensaje}.",
+                        accion,
+                        transaction.TransactionMessage);
+
+                    return ErrorGenerico(
+                        transaction.TransactionMessage ?? "No fue posible completar la operación.");
                 }
 
                 return Json(new UsuarioWebRegistroResponse
                 {
                     Exito = true,
                     Datos = transaction.TransactionResults ?? new List<objReponse>(),
-                    Mensaje = "Consulta exitosa",
+                    Mensaje = "Operación exitosa"
                 });
             }
             catch (Exception ex)
             {
-                // Log detallado del error
-                Console.WriteLine($"Error completo: {ex}");
-                return Json(new UsuarioWebRegistroResponse
-                {
-                    Exito = false,
-                    Mensaje = $"Error interno: {ex.Message}"
-                });
+                _logger.LogError(ex, "Error inesperado en la operación {Accion}.", accion);
+                return ErrorGenerico("No fue posible completar la operación. Intenta de nuevo.");
             }
         }
 
         [HttpPost]
-        public async Task<JsonResult> Restablecimiento([FromBody] EnivoCorreoRequest userRequest)
+        [EnableRateLimiting("restablecimiento")]
+        public async Task<JsonResult> Restablecimiento([FromBody] EnivoCorreoRequest? userRequest)
         {
+            var user = userRequest?.UserDatos;
 
-            var bot = userRequest.BotTest;
-            var user = userRequest.UserDatos;
-
-            if (!bot.Bot)
+            if (user is null)
             {
-                return Json(new { Exito = false, Mensaje = "Validacion de robot fallida" });
+                return Json(new { exito = false, mensaje = "Solicitud inválida." });
             }
-            else
+
+            if (string.IsNullOrWhiteSpace(user.CORREO_ELECTRONICO) ||
+                user.CORREO_ELECTRONICO.Length > 254 ||
+                !Regex.IsMatch(user.CORREO_ELECTRONICO, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
-                try
-                {
+                return Json(new { exito = false, mensaje = "El correo electrónico no es válido." });
+            }
+
+            // El captcha del navegador es cosmético. La protección real es el
+            // rate limit por IP y la validación del lado servidor.
+            try
+            {
                     const string caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                    int longitud = 6;
+                    const int longitud = 10;
                     var resultado = new StringBuilder(longitud);
 
-                    using (var rng = RandomNumberGenerator.Create())
+                    for (var i = 0; i < longitud; i++)
                     {
-                        var bytes = new byte[longitud];
-                        rng.GetBytes(bytes);
-                        foreach (var b in bytes)
-                        {
-                            resultado.Append(caracteres[b % caracteres.Length]);
-                        }
+                        resultado.Append(caracteres[RandomNumberGenerator.GetInt32(caracteres.Length)]);
                     }
 
                     user.CONTRASENIA = resultado.ToString();
+                    // La acción la decide el servidor; nunca el cliente.
+                    user.ACCION = "CORR";
 
                     // Crear la solicitud para la API externa
                     var apiRequest = new ApiRequest
                     {
-                        Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
-                        User = _configuration["ApiSettings:User"] ?? "tu_usuario_default",
                         Application = "LoginServicios",
                         TransactionList = new List<TransactionRequest>
                         {
@@ -400,204 +390,98 @@ namespace PrototipoComapa.Controllers
                         }
                     };
 
-                    Console.WriteLine(apiRequest);
-
                     var json = JsonSerializer.Serialize(apiRequest);
-                    var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                    // CORRECCIÓN: Usar la URL completa del endpoint
-                    var response = await _ApiClient.PostAsync("API/Transaction", content);
+                    using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    using var response = await _ApiClient.PostAsync("API/Transaction", content);
+                    var responseContent = await response.Content.ReadAsStringAsync();
 
                     if (!response.IsSuccessStatusCode)
                     {
-                        var errorContent = await response.Content.ReadAsStringAsync();
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = $"Error en el servicio externo: {response.StatusCode} - {errorContent}",
-                        });
+                        _logger.LogWarning(
+                            "La API de restablecimiento respondió {StatusCode}.",
+                            (int)response.StatusCode);
+
+                        return RestablecimientoFallido();
                     }
-
-                    var responseContent = await response.Content.ReadAsStringAsync();
-
-                    // Log para debugging
-                    Console.WriteLine($"Respuesta recibida: {responseContent}");
 
                     var apiResponse = JsonSerializer.Deserialize<ApiResponse>(responseContent);
 
-                    // Validar respuesta
-                    if (apiResponse == null)
+                    if (apiResponse is null)
                     {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = "No se recibió respuesta del servicio",
-                            Url = ""
-                        });
+                        _logger.LogWarning("La API de restablecimiento devolvió una respuesta vacía o inválida.");
+                        return RestablecimientoFallido();
                     }
 
                     if (apiResponse.ResponseCode != 1)
                     {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = apiResponse.ResponseMessage ?? "Error en el servicio externo",
-                            Url = ""
-                        });
+                        _logger.LogWarning(
+                            "La API de restablecimiento rechazó la solicitud: {Mensaje}.",
+                            apiResponse.ResponseMessage);
+
+                        return RestablecimientoFallido();
                     }
 
-                    if (apiResponse.TransactionResponses == null || apiResponse.TransactionResponses.Count == 0)
+                    if (apiResponse.TransactionResponses is null ||
+                        apiResponse.TransactionResponses.Count == 0)
                     {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = true,
-                            Datos = new List<objReponse>(),
-                            Mensaje = "No se encontraron documentos",
-                            Url = ""
-                        });
+                        return RestablecimientoFallido();
                     }
 
                     var transaction = apiResponse.TransactionResponses[0];
 
                     if (transaction.TransactionStatus != 1)
                     {
-                        return Json(new UsuarioWebRegistroResponse
-                        {
-                            Exito = false,
-                            Mensaje = transaction.TransactionMessage ?? "Error en la transacción",
-                            Url = ""
-                        });
+                        _logger.LogWarning(
+                            "El restablecimiento falló: {Mensaje}.",
+                            transaction.TransactionMessage);
+
+                        return RestablecimientoFallido();
                     }
 
                     var datos = transaction.TransactionResults ?? new List<objReponse>();
-                    user.USUARIO = datos[0].mensaje2.ToUpper();
 
-                    if (datos[0].mensaje != "OK")
+                    if (datos.Count == 0)
                     {
-                        return Json(new { exito = false, mensaje = $"{datos[0].mensaje}", Url = "" });
+                        _logger.LogWarning("El restablecimiento no devolvió datos de usuario.");
+                        return RestablecimientoFallido();
                     }
-                    //logica para enviar correo
-                    try
+
+                    user.USUARIO = (datos[0].mensaje2 ?? string.Empty).ToUpperInvariant();
+
+                    if (!string.Equals(datos[0].mensaje, "OK", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (string.IsNullOrEmpty(user.CORREO_ELECTRONICO))
-                        {
-                            return Json(new { exito = false, mensaje = "El correo electrónico es requerido" });
-                        }
+                        _logger.LogWarning(
+                            "El restablecimiento devolvió un estado no exitoso: {Estado}.",
+                            datos[0].mensaje);
 
-                        if (string.IsNullOrEmpty(user.CONTRASENIA))
-                        {
-                            return Json(new { exito = false, mensaje = "sucedio un error al generar el codigo de recuperacion" });
-                        }
-
-                        var urlCambio = Url.Action(
-                                                    "CambioContrasenia",
-                                                    "Home",
-                                                    null,
-                                                    Request.Scheme);
-                        //envio del correo
-                        var emailService = new EmailService();
-                        var envio = emailService.SendEmail
-                        (
-                            //<h3>RECUPERACION DE CONTRASEÑA EN PORTAL COMAPA VICTORIA</h3>
-                            correoDestino: user.CORREO_ELECTRONICO,
-                            asunto: "RESTABLECIOMIENTO DE CONTRASEÑA",
-                            mensajeCuerpo: $@"
-                            <body style=""margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, Helvetica, sans-serif;"">
-
-                                <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background-color:#f4f4f4; padding:20px 0;"">
-                                    <tr>
-                                        <td align=""center"">
-
-                                            <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0""
-                                                   style=""background:#ffffff; border-radius:10px; overflow:hidden;"">
-
-                                                <tr>
-                                                    <td align=""center""
-                                                        style=""background:#AB0033; color:#ffffff; padding:10px;"">
-                                                        <h1 style=""margin:0;"">Recuperación de Contraseña</h1>
-                                                    </td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td style=""padding:40px 30px; color:#333333;"">
-
-                                                        <h2 style=""margin-top:0;"">
-                                                            Hola {user.USUARIO},
-                                                        </h2>
-
-                                                        <p style=""font-size:16px; line-height:1.6;"">
-                                                            Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.
-                                                        </p>
-
-                                                        <p style=""font-size:16px; line-height:1.6;"">
-                                                            Si realizaste esta solicitud, el siguiente Codigo es una nueva contraseña temporal: 
-                                                        </p>
-
-                                                        <center><h1>{user.CONTRASENIA}</h1></center>
-
-                                                        <div style=""text-align:center; margin:35px 0;"">
-                                                            <a href=""{urlCambio}""
-                                                               style=""background:#AB0033;
-                                                                      color:#ffffff;
-                                                                      text-decoration:none;
-                                                                      padding:14px 30px;
-                                                                      border-radius:5px;
-                                                                      display:inline-block;
-                                                                      font-size:16px;
-                                                                      font-weight:bold;"">
-                                                                CAMBIAR CONTRASEÑA
-                                                            </a>
-                                                        </div>
-
-                                                        <p style=""font-size:14px; color:#666666;"">
-                                                            Este codigo expirará en 30 minutos por motivos de seguridad.
-                                                        </p>
-
-                                                        <p style=""font-size:14px; color:#666666;"">
-                                                            Si no solicitaste este cambio, puedes ignorar este correo. Tu contraseña actual seguirá siendo válida.
-                                                        </p>
-
-                                                        <hr style=""border:none; border-top:1px solid #dddddd; margin:30px 0;"">
-
-                                                        <p><b>LE RECOMENDAMOS CAMBIAR SU CONTRASEÑA EN SU PROXIMO INICIO DE SESION</b></p>
-
-                                                    </td>
-                                                </tr>
-
-                                                <tr>
-                                                    <td align=""center""
-                                                        style=""background:#f8f9fa; padding:20px; color:#666666; font-size:12px;"">
-                                                        © 2026 COMAPA - Cd. Victoria, Tamaulipas. Todos los derechos reservados.
-                                                    </td>
-                                                </tr>
-
-                                            </table>
-
-                                        </td>
-                                    </tr>
-                                </table>
-                            </body>
-                            "
-                        );
-
-                        return Json(new { exito = envio[0].exito, mensaje = envio[0].mensaje });
-
+                        return RestablecimientoFallido();
                     }
-                    catch (Exception ex)
+                    if (string.IsNullOrWhiteSpace(user.CONTRASENIA))
                     {
-                        return Json(new { exito = false, mensaje = $"Error interno: {ex.Message}" });
+                        _logger.LogWarning("No se generó la contraseña temporal.");
+                        return RestablecimientoFallido();
                     }
-                }
-                catch (Exception ex)
-                {
-                    // Log detallado del error
-                    Console.WriteLine($"Error completo: {ex}");
-                    return Json(new UsuarioWebRegistroResponse
-                    {
-                        Exito = false,
-                        Mensaje = $"Error interno: {ex.Message}"
-                    });
-                }
+
+                    var urlCambio = Url.Action(
+                        "CambioContrasenia",
+                        "Home",
+                        null,
+                        Request.Scheme);
+
+                    var envio = await _emailService.SendEmailAsync(
+                        correoDestino: user.CORREO_ELECTRONICO.Trim(),
+                        asunto: "RESTABLECIMIENTO DE CONTRASEÑA",
+                        mensajeCuerpo: EmailTemplates.Restablecimiento(
+                            user.USUARIO,
+                            user.CONTRASENIA,
+                            urlCambio ?? string.Empty));
+
+                    return Json(new { exito = envio.Exito, mensaje = envio.Mensaje });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error inesperado al restablecer la contraseña.");
+                return RestablecimientoFallido();
             }
         }
         
@@ -608,6 +492,7 @@ namespace PrototipoComapa.Controllers
             return Json(new { Exito = true, Usuario = usuario });
         }
 
+        [HttpPost]
         public IActionResult CerrarSesion()
         {
             HttpContext.Session.Clear();
@@ -615,3 +500,4 @@ namespace PrototipoComapa.Controllers
         }
     }
 }
+

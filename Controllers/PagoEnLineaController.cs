@@ -41,8 +41,6 @@ namespace AdministradorDeCuentas.Controllers
             public decimal Adeudo { get; set; }
             public bool TieneNegociacion { get; set; }
             public string Mensaje { get; set; } = string.Empty;
-            public int IdSaldo { get; set; }
-            public string Servidor { get; set; } = string.Empty;
         }
 
         [HttpPost("obtener-adeudo")]
@@ -75,13 +73,30 @@ namespace AdministradorDeCuentas.Controllers
             {
                 Exito = true,
                 CuentaValida = adeudo.CuentaValida,
-                Nombre = adeudo.Nombre,
+                // La consulta pública solo muestra el nombre enmascarado.
+                // El nombre completo se conserva del lado servidor para el comprobante.
+                Nombre = EnmascararNombre(adeudo.Nombre),
                 Adeudo = adeudo.Adeudo,
                 TieneNegociacion = adeudo.TieneNegociacion,
-                Mensaje = adeudo.Mensaje,
-                IdSaldo = adeudo.IdSaldo,
-                Servidor = adeudo.Servidor
+                Mensaje = adeudo.Mensaje
             });
+        }
+
+        private static string EnmascararNombre(string? nombre)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                return string.Empty;
+            }
+
+            var partes = nombre.Split(
+                (char[]?)null,
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            return string.Join(' ', partes.Select(parte =>
+                parte.Length <= 1
+                    ? parte
+                    : $"{parte[0]}{new string('*', Math.Min(parte.Length - 1, 6))}"));
         }
 
         [HttpPost("iniciar")]
@@ -163,11 +178,27 @@ namespace AdministradorDeCuentas.Controllers
                 ? adeudo.IdOrdenCompra
                 : $"WEB{DateTime.UtcNow:yyyyMMddHHmmss}{Random.Shared.Next(1000, 9999)}";
 
+            // Si no se configuraron URLs absolutas, se derivan del host actual
+            // (incluye el dominio del App Service o el dominio propio del portal).
+            var returnUrl = _configuration["Evo:ReturnUrl"]?.Trim();
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                returnUrl = $"{Request.Scheme}://{Request.Host}/pago-en-linea/retorno";
+            }
+
+            var cancelUrl = _configuration["Evo:CancelUrl"]?.Trim();
+            if (string.IsNullOrWhiteSpace(cancelUrl))
+            {
+                cancelUrl = $"{Request.Scheme}://{Request.Host}/pago-en-linea";
+            }
+
             try
             {
                 var sesion = await _evo.IniciarCheckoutAsync(
                     idOrden,
                     adeudo.Adeudo,
+                    returnUrl,
+                    cancelUrl,
                     cancellationToken);
 
                 var pendiente = new PagoPendiente

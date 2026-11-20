@@ -93,9 +93,18 @@ function Login() {
         data: JSON.stringify(objUser),
         cache: false,
         success: function (data) {
-            //console.log(data);
-            let result = data.datos[0].mensaje
-            if (/^\d+$/.test(result) > 0) {
+            if (!data || !data.exito || !data.datos || data.datos.length === 0) {
+                Swal.fire({
+                    title: "ERROR!!",
+                    text: (data && data.mensaje) || 'Revise su usuario y contraseña',
+                    icon: "error"
+                });
+                return;
+            }
+
+            const result = String(data.datos[0].mensaje || '');
+
+            if (/^\d+$/.test(result)) {
                 LimpiarFormLogin();
                 window.location.href = '/Home/Menu';
                 ConsultarCuentasUsuario();

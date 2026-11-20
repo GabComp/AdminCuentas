@@ -5,6 +5,7 @@ using AdministradorDeCuentas.Models.PagoEnLinea;
 
 namespace AdministradorDeCuentas.Pages
 {
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class PagoCompletadoModel : PageModel
     {
         public PagoCompletado? Pago { get; private set; }

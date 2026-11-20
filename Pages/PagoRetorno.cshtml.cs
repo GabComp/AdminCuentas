@@ -7,6 +7,7 @@ using AdministradorDeCuentas.Services;
 
 namespace AdministradorDeCuentas.Pages
 {
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class PagoRetornoModel : PageModel
     {
         private readonly EvoPaymentService _evo;
@@ -62,6 +63,29 @@ namespace AdministradorDeCuentas.Pages
             if (pendiente is null)
             {
                 MensajeError = "La información del pago no es válida. Inicia la consulta nuevamente.";
+                return Page();
+            }
+
+            if (pendiente.Cuenta <= 0 ||
+                pendiente.Importe <= 0 ||
+                string.IsNullOrWhiteSpace(pendiente.IdOrden) ||
+                string.IsNullOrWhiteSpace(pendiente.SuccessIndicator))
+            {
+                HttpContext.Session.Remove("PagoPendiente");
+                MensajeError = "La información del pago no es válida. Inicia la consulta nuevamente.";
+                return Page();
+            }
+
+            var creado = pendiente.CreadoEn.Kind == DateTimeKind.Utc
+                ? pendiente.CreadoEn
+                : pendiente.CreadoEn.ToUniversalTime();
+
+            if (creado != default && DateTime.UtcNow - creado > TimeSpan.FromMinutes(60))
+            {
+                HttpContext.Session.Remove("PagoPendiente");
+                MensajeError =
+                    "La orden de pago expiró. Si el banco autorizó el cargo, conserva tu comprobante " +
+                    "y comunícate a la sucursal.";
                 return Page();
             }
 
@@ -180,9 +204,11 @@ namespace AdministradorDeCuentas.Pages
                 fechaPago = fechaOrden;
             }
 
+            var usuarioPago = _configuration["ApiSettings:RecibosUsuario"]?.Trim();
+
             var solicitud = new AplicarPagoApiRequest
             {
-                CIdUsuario = _configuration["ApiSettings:RecibosUsuario"] ?? "U0293",
+                CIdUsuario = string.IsNullOrWhiteSpace(usuarioPago) ? "U0293" : usuarioPago,
                 NCuenta = pendiente.Cuenta,
                 DImporte = pendiente.Importe,
                 NIdFormaPago = _configuration.GetValue<int?>("ApiSettings:RecibosFormaPago") ?? 4,
@@ -194,7 +220,7 @@ namespace AdministradorDeCuentas.Pages
                 CardNameOnCard = string.IsNullOrWhiteSpace(tarjeta?.NameOnCard)
                     ? "TITULAR"
                     : tarjeta!.NameOnCard!,
-                CardNumber = numeroTarjeta,
+                CardNumber = ultimosDigitos,
                 CardIssuer = tarjeta?.Issuer ?? string.Empty,
                 Fecha = fechaPago,
                 IdSaldo = pendiente.IdSaldo > 0 ? pendiente.IdSaldo : null,

@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using AdministradorDeCuentas.Services;
 
 namespace AdministradorDeCuentas.Pages
 {
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class PagoReciboModel : PageModel
     {
         private readonly IConfiguration _configuration;

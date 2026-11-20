@@ -125,7 +125,12 @@ function RegistrarUsuario() {
         data: JSON.stringify(objRegistro),
         cache: false,
         success: function (data) {
-            if (data.datos[0].mensaje === 'OK' && data.exito) {
+            const mensaje = data && data.mensaje
+                ? data.mensaje
+                : (data && data.datos && data.datos.length > 0 ? data.datos[0].mensaje : null);
+
+            if (data && data.exito && data.datos && data.datos.length > 0 &&
+                data.datos[0].mensaje === 'OK') {
                 Swal.fire({
                     title: "AVISO!!",
                     text: "el usuario se registro correctamente",
@@ -136,7 +141,11 @@ function RegistrarUsuario() {
                     window.location.href = '/Home/Index';
                 });
             } else {
-                Swal.fire({ title: "ERROR!!", text: `${data.datos[0].mensaje}`, icon: "error" });
+                Swal.fire({
+                    title: "ERROR!!",
+                    text: mensaje || 'No fue posible registrar el usuario.',
+                    icon: "error"
+                });
             }
         },
         error: function () {

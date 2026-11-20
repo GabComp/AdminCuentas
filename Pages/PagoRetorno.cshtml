@@ -3,6 +3,7 @@
 @using AdministradorDeCuentas.Pages
 @model PagoRetornoModel
 @{
+    Layout = "_LayoutPago";
     ViewData["Title"] = "Resultado del pago";
     ViewData["Description"] = "Validación del pago en línea de COMAPA Victoria.";
 }
@@ -10,7 +11,7 @@
 <section class="page-header text-center">
     <div class="container">
         <div class="breadcrumb">
-            <a asp-page="/Index">Inicio</a> / <a asp-page="/pago-en-linea">Pago en línea</a> / <span>Resultado</span>
+            <a asp-page="/pago-en-linea">Pago en línea</a> / <span>Resultado</span>
         </div>
         <h1>Resultado del pago</h1>
     </div>
@@ -37,7 +38,7 @@
                     </p>
                     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-4">
                         <a asp-page="/pago-en-linea" class="btn-primary">Intentar de nuevo</a>
-                        <a asp-page="/Index" class="btn-secondary">Volver al inicio</a>
+                        <a href="/pago-en-linea" class="btn-secondary">Volver al pago</a>
                     </div>
                 </div>
             </div>

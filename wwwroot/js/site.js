@@ -1,4 +1,17 @@
 ﻿
+(function () {
+    // Token antiforgery generado por _AntiforgeryMeta.cshtml.
+    // Se envía en todas las peticiones AJAX de jQuery.
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && meta.content) {
+        $.ajaxSetup({
+            headers: {
+                "RequestVerificationToken": meta.content
+            }
+        });
+    }
+})();
+
 let Usuario_ID = 0
 
 let objUser = {

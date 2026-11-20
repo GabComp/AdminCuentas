@@ -32,11 +32,17 @@ namespace AdministradorDeCuentas.Services
         public async Task<EvoSessionResponse> IniciarCheckoutAsync(
             string idOrden,
             decimal importe,
+            string? returnUrlPersonalizada,
+            string? cancelUrlPersonalizada,
             CancellationToken cancellationToken)
         {
             var initiateUrl = ObtenerConfiguracionObligatoria("Evo:InitiateCheckoutUrl");
-            var returnUrl = ObtenerConfiguracionObligatoria("Evo:ReturnUrl");
-            var cancelUrl = ObtenerConfiguracionObligatoria("Evo:CancelUrl");
+            var returnUrl = string.IsNullOrWhiteSpace(returnUrlPersonalizada)
+                ? ObtenerConfiguracionObligatoria("Evo:ReturnUrl")
+                : returnUrlPersonalizada.Trim();
+            var cancelUrl = string.IsNullOrWhiteSpace(cancelUrlPersonalizada)
+                ? ObtenerConfiguracionObligatoria("Evo:CancelUrl")
+                : cancelUrlPersonalizada.Trim();
             var merchantName = _configuration["Evo:MerchantName"] ?? "COMAPA VICTORIA";
 
             var merchant = new Dictionary<string, object?>

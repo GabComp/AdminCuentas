@@ -1,34 +1,29 @@
-﻿using AdministradorDeCuentas.Filters;
-using AdministradorDeCuentas.Models.APIRecibos;
-
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using PrototipoComapa.Models.API.Transactions;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using static PrototipoComapa.Models.API.Transactions.UsuarioRecibos;
-using static PrototipoComapa.Models.API.Transactions.UsuarioWebTransactions;
-using static PrototipoComapa.Models.UsuarioWeb.UsuarioWebModel;
-using JsonSerializer = Newtonsoft.Json.JsonSerializer;
+using AdministradorDeCuentas.Filters;
+using AdministradorDeCuentas.Models.APIRecibos;
+using AdministradorDeCuentas.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace PrototipoComapa.Controllers.Servicios.TramitesDisponibles
 {
     [ValidarSesion]
     public class RecibosController : Controller
     {
-        //private readonly HttpClient _ApiRecibos;
-        private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly RecibosAuthService _auth;
+        private readonly ILogger<RecibosController> _logger;
 
-        public RecibosController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public RecibosController(
+            IHttpClientFactory httpClientFactory,
+            RecibosAuthService auth,
+            ILogger<RecibosController> logger)
         {
             _httpClientFactory = httpClientFactory;
-            _configuration = configuration;
+            _auth = auth;
+            _logger = logger;
         }
 
         // GET: RecibosController
@@ -38,307 +33,296 @@ namespace PrototipoComapa.Controllers.Servicios.TramitesDisponibles
         }
 
         [HttpPost]
-        public async Task<JsonResult> LoginRecibos([FromBody] RecibosModel requestt)
+        [EnableRateLimiting("recibos")]
+        public async Task<IActionResult> ConsultaRecibos([FromBody] DatosValidacion? Jcontent)
         {
+            var idCuenta = Jcontent?.filtros?.FirstOrDefault()?.id_cuenta;
+
+            if (idCuenta is null or <= 0)
+            {
+                return Json(new { ok = false, message = "Debe indicar una cuenta válida." });
+            }
+
+            if (!CuentaPerteneceAlUsuario(idCuenta.Value))
+            {
+                _logger.LogWarning(
+                    "El usuario intentó consultar recibos de una cuenta que no le pertenece ({Cuenta}).",
+                    idCuenta);
+
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    ok = false,
+                    message = "No tienes acceso a esa cuenta."
+                });
+            }
+
+            var cancellationToken = HttpContext.RequestAborted;
+
             try
             {
-                var client = _httpClientFactory.CreateClient("ApiReciboslClient");
+                using var response = await EnviarAsync(
+                    "comercial/HistoriaRecibos",
+                    Jcontent!,
+                    cancellationToken);
 
-                var json = JsonConvert.SerializeObject(requestt);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
-
-                var response = await client.PostAsync("auth/login", content, cts.Token);
-
-                var body = await response.Content.ReadAsStringAsync();
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    _auth.InvalidarToken();
+                    _logger.LogWarning("La API de recibos rechazó el token al consultar el historial.");
+                    return ServicioNoDisponible();
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    return Json(new
-                    {
-                        ok = false,
-                        status = (int)response.StatusCode,
-                        message = "Error al autenticar con API Recibos",
-                        detail = body
-                    });
+                    _logger.LogWarning(
+                        "HistoriaRecibos respondió {StatusCode} para la cuenta {Cuenta}.",
+                        (int)response.StatusCode,
+                        idCuenta);
+
+                    return Json(new { ok = false, message = "No fue posible consultar los recibos." });
                 }
 
-                if (string.IsNullOrWhiteSpace(body))
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        message = "La API respondió vacío"
-                    });
-                }
+                var lista = JsonSerializer.Deserialize<List<ConsultaRecibosResponse>>(
+                    body,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                var tokenResponse = JsonConvert.DeserializeObject<RecibosResponse>(body);
-
-                if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.token))
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        message = "No se pudo obtener el token de la respuesta"
-                    });
-                }
-
-                HttpContext.Session.SetString("TokenRecibos", tokenResponse.token);
-
-                return Json(new
-                {
-                    ok = true,
-                    //body = tokenResponse,
-                    //response = response
-                });
+                return Json(new { ok = true, body = lista ?? new List<ConsultaRecibosResponse>() });
             }
-            catch (TaskCanceledException)
+            catch (InvalidOperationException ex)
             {
-                return Json(new
+                _logger.LogError(ex, "Configuración incompleta al consultar recibos.");
+                return ServicioNoDisponible();
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Tiempo de espera agotado al consultar recibos de la cuenta {Cuenta}.", idCuenta);
+                return StatusCode(StatusCodes.Status504GatewayTimeout, new
                 {
                     ok = false,
-                    message = "Timeout al conectar con API Recibos"
+                    message = "La consulta tardó demasiado. Intenta de nuevo."
                 });
             }
             catch (HttpRequestException ex)
             {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error de conexión con API Recibos",
-                    detail = ex.Message
-                });
+                _logger.LogError(ex, "Error de comunicación al consultar recibos de la cuenta {Cuenta}.", idCuenta);
+                return ServicioNoDisponible();
             }
-            catch (Exception ex)
+            catch (JsonException ex)
             {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error desconocido",
-                    detail = ex.Message
-                });
+                _logger.LogError(ex, "Respuesta inválida al consultar recibos de la cuenta {Cuenta}.", idCuenta);
+                return Json(new { ok = false, message = "El servicio devolvió una respuesta no válida." });
             }
         }
 
-        public async Task<JsonResult> ValidarLoginRecibos([FromBody] DatosValidacion Jcontent)
+        [HttpPost]
+        [EnableRateLimiting("recibos")]
+        public async Task<IActionResult> ConsultaReciboPDF([FromBody] DatosValidacion? Jcontent)
         {
-            try
-            {
-                var client = _httpClientFactory.CreateClient("ApiReciboslClient");
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{client.BaseAddress}comercial/ValidaCuenta");
-                var token = HttpContext.Session.GetString("TokenRecibos") ?? "";
-                request.Headers.Add("X-API-KEY", "bXre5Bh8UJrfryj5ZnvWQ5IE90jiw1OcaX6o");
-                request.Headers.Add("Authorization", $"Bearer {token}");
+            var filtro = Jcontent?.filtros?.FirstOrDefault();
+            var idRecibo = filtro?.id_recibo;
+            var idCuenta = filtro?.id_cuenta;
 
-                var json = JsonConvert.SerializeObject(Jcontent);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                request.Content = content;
-
-                var response = await client.SendAsync(request);
-                var body = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        status = (int)response.StatusCode,
-                        message = "Error al autenticar con API Recibos",
-                        detail = body
-                    });
-                }
-
-                if (string.IsNullOrWhiteSpace(body))
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        message = "La API respondió vacío"
-                    });
-                }
-
-                var lista = JsonConvert.DeserializeObject<List<DatosValidacionResponse>>(body);
-
-                return Json(new
-                {
-                    ok = true,
-                    body = lista,
-                    response = response
-                });
-            }
-            catch (TaskCanceledException)
+            if (string.IsNullOrWhiteSpace(idRecibo) || idCuenta is null or <= 0)
             {
                 return Json(new
                 {
                     ok = false,
-                    message = "Timeout al conectar con API Recibos"
+                    message = "Debe indicar la cuenta y el recibo que desea descargar."
+                });
+            }
+
+            if (!CuentaPerteneceAlUsuario(idCuenta.Value))
+            {
+                _logger.LogWarning(
+                    "El usuario intentó descargar un recibo de una cuenta que no le pertenece ({Cuenta}).",
+                    idCuenta);
+
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    ok = false,
+                    message = "No tienes acceso a esa cuenta."
+                });
+            }
+
+            var cancellationToken = HttpContext.RequestAborted;
+
+            try
+            {
+                // Se confirma que el recibo pertenece a la cuenta del usuario antes
+                // de pedir el PDF. Sin esta validación, un usuario podría cambiar el
+                // id_recibo y descargar documentos de otra persona.
+                if (!await ReciboPerteneceACuentaAsync(idCuenta.Value, idRecibo, cancellationToken))
+                {
+                    _logger.LogWarning(
+                        "El recibo {Recibo} no pertenece a la cuenta {Cuenta} del usuario.",
+                        idRecibo,
+                        idCuenta);
+
+                    return StatusCode(StatusCodes.Status403Forbidden, new
+                    {
+                        ok = false,
+                        message = "El recibo no pertenece a la cuenta indicada."
+                    });
+                }
+
+                using var response = await EnviarAsync(
+                    "comercial/ObtnRecibo",
+                    Jcontent!,
+                    cancellationToken);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    _auth.InvalidarToken();
+                    _logger.LogWarning("La API de recibos rechazó el token al generar el PDF.");
+                    return ServicioNoDisponible();
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogWarning(
+                        "ObtnRecibo respondió {StatusCode} para el recibo {Recibo}. Detalle: {Detalle}",
+                        (int)response.StatusCode,
+                        idRecibo,
+                        body);
+
+                    return Json(new { ok = false, message = "No fue posible generar el recibo." });
+                }
+
+                var pdfBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+
+                return Json(new { ok = true, body = pdfBytes });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Configuración incompleta al generar el recibo.");
+                return ServicioNoDisponible();
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Tiempo de espera agotado al generar el recibo {Recibo}.", idRecibo);
+                return StatusCode(StatusCodes.Status504GatewayTimeout, new
+                {
+                    ok = false,
+                    message = "La generación del recibo tardó demasiado. Intenta de nuevo."
                 });
             }
             catch (HttpRequestException ex)
             {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error de conexión con API Recibos",
-                    detail = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error desconocido",
-                    detail = ex.Message
-                });
+                _logger.LogError(ex, "Error de comunicación al generar el recibo {Recibo}.", idRecibo);
+                return ServicioNoDisponible();
             }
         }
 
-        public async Task<JsonResult> ConsultaRecibos([FromBody] DatosValidacion Jcontent)
-        {
-            try
-            {
-                var client = _httpClientFactory.CreateClient("ApiReciboslClient");
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{client.BaseAddress}comercial/HistoriaRecibos");
-                var token = HttpContext.Session.GetString("TokenRecibos") ?? "";
-                request.Headers.Add("X-API-KEY", "bXre5Bh8UJrfryj5ZnvWQ5IE90jiw1OcaX6o");
-                request.Headers.Add("Authorization", $"Bearer {token}");
-
-                var json = JsonConvert.SerializeObject(Jcontent);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                request.Content = content;
-
-                var response = await client.SendAsync(request);
-                var body = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        status = (int)response.StatusCode,
-                        message = "Error al autenticar con API Recibos",
-                        detail = body
-                    });
-                }
-
-                if (string.IsNullOrWhiteSpace(body))
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        message = "La API respondió vacío"
-                    });
-                }
-
-                var lista = JsonConvert.DeserializeObject<List<ConsultaRecibosResponse>>(body);
-
-                return Json(new
-                {
-                    ok = true,
-                    body = lista,
-                    response = response
-                });
-            }
-            catch (TaskCanceledException)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Timeout al conectar con API Recibos"
-                });
-            }
-            catch (HttpRequestException ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error de conexión con API Recibos",
-                    detail = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error desconocido",
-                    detail = ex.Message
-                });
-            }
-        }
-
-        public async Task<JsonResult> ConsultaReciboPDF([FromBody] DatosValidacion Jcontent)
-        {
-            try
-            {
-                var client = _httpClientFactory.CreateClient("ApiReciboslClient");
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{client.BaseAddress}comercial/ObtnRecibo");
-                var token = HttpContext.Session.GetString("TokenRecibos") ?? "";
-                request.Headers.Add("X-API-KEY", "bXre5Bh8UJrfryj5ZnvWQ5IE90jiw1OcaX6o");
-                request.Headers.Add("Authorization", $"Bearer {token}");
-
-                var json = JsonConvert.SerializeObject(Jcontent);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                request.Content = content;
-
-                var response = await client.SendAsync(request);
-                var body = await response.Content.ReadAsStringAsync();
-                var pdfBytes = await response.Content.ReadAsByteArrayAsync();
-
-                if (!response.IsSuccessStatusCode)
-
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        status = (int)response.StatusCode,
-                        message = "Error al autenticar con API Recibos",
-                        detail = body
-                    });
-                }
-
-                return Json(new
-                {
-                    ok = true,
-                    body = pdfBytes,
-                    response = response
-                });
-            }
-            catch (TaskCanceledException)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Timeout al conectar con API Recibos"
-                });
-            }
-            catch (HttpRequestException ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error de conexión con API Recibos",
-                    detail = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error desconocido",
-                    detail = ex.Message
-                });
-            }
-        }
-
+        [HttpGet]
         public IActionResult ObtenerCuentasRecibosUsuario()
         {
             var cuentasJson = HttpContext.Session.GetString("CuentasUsuario");
 
+            if (string.IsNullOrWhiteSpace(cuentasJson))
+            {
+                return NoContent();
+            }
+
             return Content(cuentasJson, "application/json");
+        }
+
+        private bool CuentaPerteneceAlUsuario(int idCuenta)
+        {
+            var cuentasJson = HttpContext.Session.GetString("CuentasUsuario");
+
+            if (string.IsNullOrWhiteSpace(cuentasJson))
+            {
+                return false;
+            }
+
+            try
+            {
+                var cuentas = JsonSerializer.Deserialize<List<CuentaSesion>>(
+                    cuentasJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return cuentas?.Any(c => c.CUENTA_COMAPA == idCuenta) == true;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "La lista de cuentas de la sesión no es válida.");
+                return false;
+            }
+        }
+
+        private async Task<bool> ReciboPerteneceACuentaAsync(
+            int idCuenta,
+            string idRecibo,
+            CancellationToken cancellationToken)
+        {
+            var payload = new DatosValidacion
+            {
+                alias = "VALIDA_CUENTA",
+                filtros = new List<Filtro>
+                {
+                    new() { id_cuenta = idCuenta }
+                }
+            };
+
+            using var response = await EnviarAsync(
+                "comercial/HistoriaRecibos",
+                payload,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "No se pudo verificar el recibo {Recibo}: HistoriaRecibos respondió {StatusCode}.",
+                    idRecibo,
+                    (int)response.StatusCode);
+
+                return false;
+            }
+
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            var recibos = JsonSerializer.Deserialize<List<ConsultaRecibosResponse>>(
+                body,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            return recibos?.Any(r =>
+                string.Equals(r.id_recibo, idRecibo, StringComparison.Ordinal)) == true;
+        }
+
+        private async Task<HttpResponseMessage> EnviarAsync(
+            string ruta,
+            object payload,
+            CancellationToken cancellationToken)
+        {
+            var token = await _auth.ObtenerTokenAsync(cancellationToken);
+            var client = _httpClientFactory.CreateClient("RecibosClient");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, ruta)
+            {
+                Content = new StringContent(
+                    JsonSerializer.Serialize(payload),
+                    Encoding.UTF8,
+                    "application/json")
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        private ObjectResult ServicioNoDisponible() =>
+            StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                ok = false,
+                message = "El servicio de recibos no está disponible en este momento."
+            });
+
+        public sealed class CuentaSesion
+        {
+            public int CUENTA_COMAPA { get; set; }
         }
     }
 }
+

@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using static PrototipoComapa.Models.Restablecer.RestableceContra;
 
 namespace PrototipoComapa.Models.UsuarioWeb
 {
@@ -8,52 +7,53 @@ namespace PrototipoComapa.Models.UsuarioWeb
         #region Login
         public class UsuarioWebRegistroRequest
         {
-            public string ACCION { get; set; }
-            public string USUARIO { get; set; }
-            public string CONTRASENIA { get; set; }
-            public string CORREO_ELECTRONICO { get; set; }
-            public string TELEFONO_CEL { get; set; }
-            public string MOTIVO_BAJA { get; set; }
-            public string ID_USUARIO { get; set; }
-            public string CODIGO { get; set; }
+            public string ACCION { get; set; } = string.Empty;
+            public string USUARIO { get; set; } = string.Empty;
+            public string CONTRASENIA { get; set; } = string.Empty;
+            public string CORREO_ELECTRONICO { get; set; } = string.Empty;
+            public string TELEFONO_CEL { get; set; } = string.Empty;
+            public string MOTIVO_BAJA { get; set; } = string.Empty;
+            public string ID_USUARIO { get; set; } = string.Empty;
+            public string CODIGO { get; set; } = string.Empty;
         }
+
         public class UsuarioWebRegistroResponse
         {
             public bool Exito { get; set; }
-            public List<objReponse> Datos { get; set; }
-            public string Mensaje { get; set; }
-            public string Url { get; set; }
-            public Usuario User { get; set; }
+            public List<objReponse> Datos { get; set; } = new();
+            public string Mensaje { get; set; } = string.Empty;
+            public string Url { get; set; } = string.Empty;
+            public Usuario? User { get; set; }
         }
+
         public class objReponse
         {
             [JsonPropertyName("mensaje")]
-            public string mensaje { get; set; }
+            public string mensaje { get; set; } = string.Empty;
 
             [JsonPropertyName("mensaje2")]
-            public string mensaje2 { get; set; }
+            public string mensaje2 { get; set; } = string.Empty;
 
             [JsonPropertyName("mensaje3")]
-            public string mensaje3 { get; set; }
+            public string mensaje3 { get; set; } = string.Empty;
 
             [JsonPropertyName("NOMBRE")]
-            public string NOMBRE { get; set; }
+            public string NOMBRE { get; set; } = string.Empty;
 
             [JsonPropertyName("CORREO")]
-            public string CORREO { get; set; }
+            public string CORREO { get; set; } = string.Empty;
         }
         #endregion
 
         public class EnivoCorreoRequest
         {
-            public UsuarioWebRegistroRequest UserDatos { get; set; }
-            public RestablecerContraRequest BotTest { get; set; }
+            public UsuarioWebRegistroRequest UserDatos { get; set; } = new();
         }
 
         public class Usuario
         {
-            public string USUARIO { get; set; }
-            public string CORREO_ELECTRONICO { get; set; }
+            public string USUARIO { get; set; } = string.Empty;
+            public string CORREO_ELECTRONICO { get; set; } = string.Empty;
         }
     }
 }

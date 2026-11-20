@@ -1,15 +1,14 @@
-﻿using AdministradorDeCuentas.Filters;
-using AdministradorDeCuentas.Models.APIRecibos;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-//using Newtonsoft.Json;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using AdministradorDeCuentas.Filters;
+using AdministradorDeCuentas.Models.APIRecibos;
+using AdministradorDeCuentas.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using static AdministradorDeCuentas.Models.API.Transactions.CunetaUsuariosTransaction;
 using static APIPipas.Models.CuentaUsuarios.CuentaUsuarios;
 using static PrototipoComapa.Models.API.Transactions.UsuarioWebTransactions;
-//using static PrototipoComapa.Models.UsuarioWeb.UsuarioWebModel;
-
 
 namespace AdministradorDeCuentas.Controllers
 {
@@ -18,189 +17,106 @@ namespace AdministradorDeCuentas.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
-        //private readonly HttpClient _ApiClient;
+        private readonly RecibosAuthService _auth;
+        private readonly ILogger<AdministradorDeCuentasController> _logger;
 
-        public AdministradorDeCuentasController(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public AdministradorDeCuentasController(
+            IConfiguration configuration,
+            IHttpClientFactory httpClientFactory,
+            RecibosAuthService auth,
+            ILogger<AdministradorDeCuentasController> logger)
         {
-             _configuration = configuration;
+            _configuration = configuration;
             _httpClientFactory = httpClientFactory;
-            //_ApiClient = factory.CreateClient("ApiGeneralClient");
+            _auth = auth;
+            _logger = logger;
         }
+
         public IActionResult AdministradorDeCuentas()
         {
             return View();
         }
 
         [HttpPost]
-        public async Task<JsonResult> LoginCuentas([FromBody] RecibosModel requestt)
+        [EnableRateLimiting("recibos")]
+        public async Task<IActionResult> ValidarCuentasUsuarios([FromBody] DatosValidacion? Jcontent)
         {
-            try
-            {
-                var client = _httpClientFactory.CreateClient("ApiReciboslClient");
+            var filtro = Jcontent?.filtros?.FirstOrDefault();
 
-                var json = JsonConvert.SerializeObject(requestt);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25));
-
-                var response = await client.PostAsync("auth/login", content, cts.Token);
-
-                var body = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        status = (int)response.StatusCode,
-                        message = "Error al autenticar con API Recibos",
-                        detail = body
-                    });
-                }
-
-                if (string.IsNullOrWhiteSpace(body))
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        message = "La API respondió vacío"
-                    });
-                }
-
-                var tokenResponse = JsonConvert.DeserializeObject<RecibosResponse>(body);
-
-                if (tokenResponse == null || string.IsNullOrEmpty(tokenResponse.token))
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        message = "No se pudo obtener el token de la respuesta"
-                    });
-                }
-
-                HttpContext.Session.SetString("TokenRecibos", tokenResponse.token);
-
-                return Json(new
-                {
-                    ok = true,
-                    //body = tokenResponse,
-                    //response = response
-                });
-            }
-            catch (TaskCanceledException)
+            if (filtro?.id_cuenta is null or <= 0 ||
+                string.IsNullOrWhiteSpace(filtro.nombre) ||
+                filtro.total is null or <= 0)
             {
                 return Json(new
                 {
                     ok = false,
-                    message = "Timeout al conectar con API Recibos"
+                    message = "Debe indicar cuenta, nombre y total a validar."
+                });
+            }
+
+            var cancellationToken = HttpContext.RequestAborted;
+
+            try
+            {
+                var valida = await ValidarCuentaAsync(
+                    filtro.id_cuenta.Value,
+                    filtro.nombre,
+                    filtro.total.Value,
+                    cancellationToken);
+
+                return Json(new { ok = true, body = valida });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Configuración incompleta al validar la cuenta.");
+                return ServicioNoDisponible();
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Tiempo de espera agotado al validar la cuenta {Cuenta}.", filtro.id_cuenta);
+                return StatusCode(StatusCodes.Status504GatewayTimeout, new
+                {
+                    ok = false,
+                    message = "La validación tardó demasiado. Intenta de nuevo."
                 });
             }
             catch (HttpRequestException ex)
             {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error de conexión con API Recibos",
-                    detail = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error desconocido",
-                    detail = ex.Message
-                });
+                _logger.LogError(ex, "Error de comunicación al validar la cuenta {Cuenta}.", filtro.id_cuenta);
+                return ServicioNoDisponible();
             }
         }
 
         [HttpPost]
-        public async Task<JsonResult> ValidarCuentasUsuarios([FromBody] DatosValidacion Jcontent)
+        [EnableRateLimiting("recibos")]
+        public async Task<JsonResult> ConsultarCuentasUsuario([FromBody] USUARIO_WEB_CUENTA? request)
         {
+            if (request is null)
+            {
+                return Json(new CuentasUsuarioResponse
+                {
+                    Exito = false,
+                    Mensaje = "Solicitud inválida.",
+                    Datos = new List<USUARIO_WEB_CUENTA_Result>()
+                });
+            }
+
+            if (!TryObtenerIdUsuarioSesion(out var idUsuarioWeb))
+            {
+                return Json(new CuentasUsuarioResponse
+                {
+                    Exito = false,
+                    Mensaje = "La sesión expiró. Inicia sesión nuevamente.",
+                    Datos = new List<USUARIO_WEB_CUENTA_Result>()
+                });
+            }
+
+            request.ID_USUARIO_WEB = idUsuarioWeb;
+
             try
             {
-                var client = _httpClientFactory.CreateClient("ApiReciboslClient");
-                var request = new HttpRequestMessage(HttpMethod.Post, $"{client.BaseAddress}comercial/ValidaCuenta");
-                var token = HttpContext.Session.GetString("TokenRecibos") ?? "";
-                request.Headers.Add("X-API-KEY", "bXre5Bh8UJrfryj5ZnvWQ5IE90jiw1OcaX6o");
-                request.Headers.Add("Authorization", $"Bearer {token}");
-
-                var json = JsonConvert.SerializeObject(Jcontent);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                request.Content = content;
-
-                var response = await client.SendAsync(request);
-                var body = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        status = (int)response.StatusCode,
-                        message = "Error al autenticar con API Recibos",
-                        detail = body
-                    });
-                }
-
-                if (string.IsNullOrWhiteSpace(body))
-                {
-                    return Json(new
-                    {
-                        ok = false,
-                        message = "La API respondió vacío"
-                    });
-                }
-
-                var lista = JsonConvert.DeserializeObject<List<DatosValidacionResponse>>(body);
-
-                return Json(new
-                {
-                    ok = true,
-                    body = lista,
-                    response = response
-                });
-            }
-            catch (TaskCanceledException)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Timeout al conectar con API Recibos"
-                });
-            }
-            catch (HttpRequestException ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error de conexión con API Recibos",
-                    detail = ex.Message
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new
-                {
-                    ok = false,
-                    message = "Error desconocido",
-                    detail = ex.Message
-                });
-            }
-        }
-
-        [HttpPost]
-        public async Task<JsonResult> ConsultarCuentasUsuario([FromBody] USUARIO_WEB_CUENTA request)
-        {
-            try
-            {
-                var idUseuario = HttpContext.Session.GetString("ID_USUARIO") ?? "";
-                request.ID_USUARIO_WEB = Convert.ToInt16(idUseuario);
                 var apiRequest = new CuentaUsuarioApiRequest
                 {
-                    Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
-                    User = _configuration["ApiSettings:User"] ?? "tu_usuario_default",
                     Application = "CuentaUsuarios",
                     TransactionList = new List<CuentaUsuarioTransactionRequest>
                     {
@@ -211,116 +127,194 @@ namespace AdministradorDeCuentas.Controllers
                             TransactionLog = true,
                             TransactionAttributes = new USUARIO_WEB_CUENTA
                             {
-                                ID_USUARIO_WEB = request.ID_USUARIO_WEB,
+                                ID_USUARIO_WEB = idUsuarioWeb
                             }
                         }
                     }
                 };
-                Console.WriteLine(apiRequest);
-                var client = _httpClientFactory.CreateClient("ApiGeneralClient");
-                var json = System.Text.Json.JsonSerializer.Serialize(apiRequest);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // CORRECCIÓN: Usar la URL completa del endpoint
-                var response = await client.PostAsync("API/Transaction", content);
+                var client = _httpClientFactory.CreateClient("ApiGeneralClient");
+                var json = JsonSerializer.Serialize(apiRequest);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var response = await client.PostAsync("API/Transaction", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning(
+                        "La API de cuentas respondió {StatusCode} al consultar.",
+                        (int)response.StatusCode);
+
                     return Json(new CuentasUsuarioResponse
                     {
                         Exito = false,
-                        Mensaje = $"Error en el servicio externo: {response.StatusCode} - {errorContent}",
+                        Mensaje = "No fue posible consultar tus cuentas. Intenta de nuevo.",
+                        Datos = new List<USUARIO_WEB_CUENTA_Result>()
                     });
                 }
 
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonSerializer.Deserialize<ApiCunetaUsuariosResponse>(responseContent);
 
-                // Log para debugging
-                Console.WriteLine($"Respuesta recibida: {responseContent}");
-
-                var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiCunetaUsuariosResponse>(responseContent);
-
-                // Validar respuesta
-                if (apiResponse == null)
+                if (apiResponse is null || apiResponse.ResponseCode != 1)
                 {
+                    _logger.LogWarning(
+                        "La API de cuentas rechazó la consulta: {Mensaje}.",
+                        apiResponse?.ResponseMessage);
+
                     return Json(new CuentasUsuarioResponse
                     {
                         Exito = false,
-                        Mensaje = "No se recibió respuesta del servicio",
-                        //Url = ""
+                        Mensaje = "No fue posible consultar tus cuentas. Intenta de nuevo.",
+                        Datos = new List<USUARIO_WEB_CUENTA_Result>()
                     });
                 }
 
-                if (apiResponse.ResponseCode != 1)
-                {
-                    return Json(new CuentasUsuarioResponse
-                    {
-                        Exito = false,
-                        Mensaje = apiResponse.ResponseMessage ?? "Error en el servicio externo",
-                        //Url = ""
-                    });
-                }
-
-                if (apiResponse.TransactionResponses == null || apiResponse.TransactionResponses.Count == 0)
+                if (apiResponse.TransactionResponses is null ||
+                    apiResponse.TransactionResponses.Count == 0)
                 {
                     return Json(new CuentasUsuarioResponse
                     {
                         Exito = true,
                         Datos = new List<USUARIO_WEB_CUENTA_Result>(),
-                        Mensaje = "No se encontraron documentos",
+                        Mensaje = "No tienes cuentas registradas."
                     });
                 }
 
                 var transaction = apiResponse.TransactionResponses[0];
 
-                var usuarioSesion = transaction.TransactionResults?.FirstOrDefault();
-                var cuentas = transaction.TransactionResults?.Select(x => new { x.CUENTA_COMAPA, x.ALIAS_CUENTA } ).ToList();
-                var cuentasJson = System.Text.Json.JsonSerializer.Serialize(cuentas);
-
-                HttpContext.Session.SetString("CuentasUsuario", cuentasJson);
-
                 if (transaction.TransactionStatus != 1)
                 {
+                    _logger.LogWarning(
+                        "La consulta de cuentas falló: {Mensaje}.",
+                        transaction.TransactionMessage);
+
                     return Json(new CuentasUsuarioResponse
                     {
                         Exito = false,
-                        Mensaje = transaction.TransactionMessage ?? "Error en la transacción",
+                        Mensaje = "No fue posible consultar tus cuentas. Intenta de nuevo.",
+                        Datos = new List<USUARIO_WEB_CUENTA_Result>()
                     });
                 }
+
+                var datos = transaction.TransactionResults ?? new List<USUARIO_WEB_CUENTA_Result>();
+                var cuentas = datos
+                    .Select(x => new { x.CUENTA_COMAPA, x.ALIAS_CUENTA })
+                    .ToList();
+
+                // La lista se guarda en sesión solo después de una consulta exitosa.
+                HttpContext.Session.SetString("CuentasUsuario", JsonSerializer.Serialize(cuentas));
 
                 return Json(new CuentasUsuarioResponse
                 {
                     Exito = true,
-                    Datos = transaction.TransactionResults ?? new List<USUARIO_WEB_CUENTA_Result>(),
-                    Mensaje = "Consulta exitosa",
-                    //User = usuarioResponse
+                    Datos = datos,
+                    Mensaje = "Consulta exitosa"
                 });
             }
             catch (Exception ex)
             {
-                // Log detallado del error
-                Console.WriteLine($"Error completo: {ex}");
+                _logger.LogError(ex, "Error inesperado al consultar las cuentas del usuario.");
                 return Json(new CuentasUsuarioResponse
                 {
                     Exito = false,
-                    Mensaje = $"Error interno: {ex.Message}"
+                    Mensaje = "No fue posible consultar tus cuentas. Intenta de nuevo.",
+                    Datos = new List<USUARIO_WEB_CUENTA_Result>()
                 });
             }
         }
 
         [HttpPost]
-        public async Task<JsonResult> ActionsCuentaUsuario([FromBody] ACTIONS_USUARIO_WEB_CUENTA request)
+        [EnableRateLimiting("recibos")]
+        public async Task<IActionResult> ActionsCuentaUsuario([FromBody] ACTIONS_USUARIO_WEB_CUENTA? request)
         {
+            if (request is null)
+            {
+                return Json(new ActionsCuentasResponse
+                {
+                    Exito = false,
+                    Mensaje = "Solicitud inválida.",
+                    Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                });
+            }
+
+            if (!TryObtenerIdUsuarioSesion(out var idUsuarioWeb))
+            {
+                return Json(new ActionsCuentasResponse
+                {
+                    Exito = false,
+                    Mensaje = "La sesión expiró. Inicia sesión nuevamente.",
+                    Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                });
+            }
+
+            var accion = (request.ACCION ?? string.Empty).Trim().ToUpperInvariant();
+
+            if (accion is not ("ALTA" or "BAJA"))
+            {
+                return Json(new ActionsCuentasResponse
+                {
+                    Exito = false,
+                    Mensaje = "Acción no permitida.",
+                    Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                });
+            }
+
+            if (request.CUENTA_COMAPA <= 0)
+            {
+                return Json(new ActionsCuentasResponse
+                {
+                    Exito = false,
+                    Mensaje = "Debe indicar una cuenta válida.",
+                    Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                });
+            }
+
+            var cancellationToken = HttpContext.RequestAborted;
+
             try
             {
-                var idUseuario = HttpContext.Session.GetString("ID_USUARIO") ?? "";
-                request.ID_USUARIO_WEB = Convert.ToInt16(idUseuario);
-                // Crear la solicitud para la API externa
+                if (accion == "ALTA")
+                {
+                    // No se confía en que el navegador haya llamado antes a ValidarCuentasUsuarios.
+                    var valida = await ValidarCuentaAsync(
+                        request.CUENTA_COMAPA,
+                        request.Nombre_Propietario ?? string.Empty,
+                        request.PAGO_TOTAL,
+                        cancellationToken);
+
+                    if (valida.Count == 0 || valida[0].usrValido != true)
+                    {
+                        _logger.LogWarning(
+                            "El usuario intentó vincular la cuenta {Cuenta} sin una validación exitosa.",
+                            request.CUENTA_COMAPA);
+
+                        return StatusCode(StatusCodes.Status403Forbidden, new ActionsCuentasResponse
+                        {
+                            Exito = false,
+                            Mensaje = "No fue posible validar la cuenta con los datos proporcionados.",
+                            Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                        });
+                    }
+                }
+                else if (!CuentaPerteneceAlUsuario(request.CUENTA_COMAPA))
+                {
+                    _logger.LogWarning(
+                        "El usuario intentó dar de baja una cuenta que no le pertenece ({Cuenta}).",
+                        request.CUENTA_COMAPA);
+
+                    return StatusCode(StatusCodes.Status403Forbidden, new ActionsCuentasResponse
+                    {
+                        Exito = false,
+                        Mensaje = "No tienes acceso a esa cuenta.",
+                        Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                    });
+                }
+
+                request.ID_USUARIO_WEB = idUsuarioWeb;
+                request.ACCION = accion;
+
                 var apiRequest = new ActionsApiRequest
                 {
-                    Token = _configuration["ApiSettings:Token"] ?? "tu_token_default",
-                    User = _configuration["ApiSettings:User"] ?? "tu_usuario_default",
                     Application = "CuentaUsuarios",
                     TransactionList = new List<ActionsCuentaTransactionRequest>
                     {
@@ -331,70 +325,65 @@ namespace AdministradorDeCuentas.Controllers
                             TransactionLog = true,
                             TransactionAttributes = new ACTIONS_USUARIO_WEB_CUENTA
                             {
-                                ACCION = request.ACCION,
-                                ID_USUARIO_WEB = request.ID_USUARIO_WEB,
+                                ACCION = accion,
+                                ID_USUARIO_WEB = idUsuarioWeb,
                                 CUENTA_COMAPA = request.CUENTA_COMAPA,
-                                MOTIVO_BAJA = request.MOTIVO_BAJA,
+                                MOTIVO_BAJA = request.MOTIVO_BAJA ?? string.Empty,
                                 ID_IMAGEN_AUTORIZA_PAPERLESS = request.ID_IMAGEN_AUTORIZA_PAPERLESS,
-                                ALIAS_CUENTA = request.ALIAS_CUENTA,
-                                Nombre_Propietario = request.Nombre_Propietario,
+                                ALIAS_CUENTA = request.ALIAS_CUENTA ?? string.Empty,
+                                Nombre_Propietario = request.Nombre_Propietario ?? string.Empty,
                                 PAGO_TOTAL = request.PAGO_TOTAL
                             }
                         }
                     }
                 };
 
-                Console.WriteLine(apiRequest);
-
-                var json = System.Text.Json.JsonSerializer.Serialize(apiRequest);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var client = _httpClientFactory.CreateClient("ApiGeneralClient");
-                // CORRECCIÓN: Usar la URL completa del endpoint
-                var response = await client.PostAsync("API/Transaction", content);
+                var json = JsonSerializer.Serialize(apiRequest);
+                using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                using var response = await client.PostAsync("API/Transaction", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning(
+                        "La API de cuentas respondió {StatusCode} en la acción {Accion}.",
+                        (int)response.StatusCode,
+                        accion);
+
                     return Json(new ActionsCuentasResponse
                     {
                         Exito = false,
-                        Mensaje = $"Error en el servicio externo: {response.StatusCode} - {errorContent}",
+                        Mensaje = "No fue posible completar la operación. Intenta de nuevo.",
+                        Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
                     });
                 }
 
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonSerializer.Deserialize<ApiActionsCunetaResponse>(responseContent);
 
-                // Log para debugging
-                Console.WriteLine($"Respuesta recibida: {responseContent}");
+                if (apiResponse is null || apiResponse.ResponseCode != 1)
+                {
+                    _logger.LogWarning(
+                        "La API de cuentas rechazó la acción {Accion}: {Mensaje}.",
+                        accion,
+                        apiResponse?.ResponseMessage);
 
-                var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiActionsCunetaResponse>(responseContent);
+                    return Json(new ActionsCuentasResponse
+                    {
+                        Exito = false,
+                        Mensaje = "No fue posible completar la operación. Intenta de nuevo.",
+                        Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                    });
+                }
 
-                // Validar respuesta
-                if (apiResponse == null)
+                if (apiResponse.TransactionResponses is null ||
+                    apiResponse.TransactionResponses.Count == 0)
                 {
                     return Json(new ActionsCuentasResponse
                     {
                         Exito = false,
-                        Mensaje = "No se recibió respuesta del servicio",
-                    });
-                }
-
-                if (apiResponse.ResponseCode != 1)
-                {
-                    return Json(new ActionsCuentasResponse
-                    {
-                        Exito = false,
-                        Mensaje = apiResponse.ResponseMessage ?? "Error en el servicio externo",
-                    });
-                }
-
-                if (apiResponse.TransactionResponses == null || apiResponse.TransactionResponses.Count == 0)
-                {
-                    return Json(new ActionsCuentasResponse
-                    {
-                        Exito = true,
-                        Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>(),
-                        Mensaje = "No se encontraron documentos",
+                        Mensaje = "No fue posible completar la operación. Intenta de nuevo.",
+                        Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
                     });
                 }
 
@@ -402,10 +391,16 @@ namespace AdministradorDeCuentas.Controllers
 
                 if (transaction.TransactionStatus != 1)
                 {
+                    _logger.LogWarning(
+                        "La acción {Accion} falló: {Mensaje}.",
+                        accion,
+                        transaction.TransactionMessage);
+
                     return Json(new ActionsCuentasResponse
                     {
                         Exito = false,
-                        Mensaje = transaction.TransactionMessage ?? "Error en la transacción",
+                        Mensaje = transaction.TransactionMessage ?? "No fue posible completar la operación.",
+                        Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
                     });
                 }
 
@@ -413,19 +408,139 @@ namespace AdministradorDeCuentas.Controllers
                 {
                     Exito = true,
                     Datos = transaction.TransactionResults ?? new List<ACTIONS_USUARIO_WEB_CUENTAResult>(),
-                    Mensaje = "Consulta exitosa",
+                    Mensaje = "Operación exitosa"
                 });
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
-                // Log detallado del error
-                Console.WriteLine($"Error completo: {ex}");
-                return Json(new ActionsCuentasResponse
+                _logger.LogError(ex, "Configuración incompleta en la acción {Accion}.", accion);
+                return ServicioNoDisponible();
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Tiempo de espera agotado en la acción {Accion}.", accion);
+                return StatusCode(StatusCodes.Status504GatewayTimeout, new ActionsCuentasResponse
                 {
                     Exito = false,
-                    Mensaje = $"Error interno: {ex.Message}"
+                    Mensaje = "La operación tardó demasiado. Intenta de nuevo.",
+                    Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
                 });
             }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Error de comunicación en la acción {Accion}.", accion);
+                return ServicioNoDisponible();
+            }
+        }
+
+        private bool TryObtenerIdUsuarioSesion(out int idUsuarioWeb)
+        {
+            idUsuarioWeb = 0;
+            var idUsuario = HttpContext.Session.GetString("ID_USUARIO");
+
+            return int.TryParse(idUsuario, out idUsuarioWeb) && idUsuarioWeb > 0;
+        }
+
+        private async Task<List<DatosValidacionResponse>> ValidarCuentaAsync(
+            int idCuenta,
+            string nombre,
+            decimal total,
+            CancellationToken cancellationToken)
+        {
+            var payload = new DatosValidacion
+            {
+                alias = "VALIDA_CUENTA",
+                filtros = new List<Filtro>
+                {
+                    new()
+                    {
+                        id_cuenta = idCuenta,
+                        nombre = nombre,
+                        total = total
+                    }
+                }
+            };
+
+            using var response = await EnviarRecibosAsync(
+                "comercial/ValidaCuenta",
+                payload,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "ValidaCuenta respondió {StatusCode} para la cuenta {Cuenta}.",
+                    (int)response.StatusCode,
+                    idCuenta);
+
+                return new List<DatosValidacionResponse>();
+            }
+
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            return JsonSerializer.Deserialize<List<DatosValidacionResponse>>(
+                       body,
+                       new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                   ?? new List<DatosValidacionResponse>();
+        }
+
+        private async Task<HttpResponseMessage> EnviarRecibosAsync(
+            string ruta,
+            object payload,
+            CancellationToken cancellationToken)
+        {
+            var token = await _auth.ObtenerTokenAsync(cancellationToken);
+            var client = _httpClientFactory.CreateClient("RecibosClient");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, ruta)
+            {
+                Content = new StringContent(
+                    JsonSerializer.Serialize(payload),
+                    Encoding.UTF8,
+                    "application/json")
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            return await client.SendAsync(request, cancellationToken);
+        }
+
+        private bool CuentaPerteneceAlUsuario(int idCuenta)
+        {
+            var cuentasJson = HttpContext.Session.GetString("CuentasUsuario");
+
+            if (string.IsNullOrWhiteSpace(cuentasJson))
+            {
+                return false;
+            }
+
+            try
+            {
+                var cuentas = JsonSerializer.Deserialize<List<CuentaSesion>>(
+                    cuentasJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return cuentas?.Any(c => c.CUENTA_COMAPA == idCuenta) == true;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "La lista de cuentas de la sesión no es válida.");
+                return false;
+            }
+        }
+
+        private ObjectResult ServicioNoDisponible() =>
+            StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                exito = false,
+                mensaje = "El servicio de cuentas no está disponible en este momento."
+            });
+
+        public sealed class CuentaSesion
+        {
+            public int CUENTA_COMAPA { get; set; }
         }
     }
 }
+
+

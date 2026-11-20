@@ -1,15 +1,11 @@
 ﻿let dataRecibos = [];
-let objResibos = {
-    username: "alexis",
-    password: "1234"
-};
 let DatosValidacion = {
     alias: "VALIDA_CUENTA",
     filtros: [
         {
-            id_cuenta: 18,
-            nombre: "Abrego Consuelo",
-            total: 1000
+            id_cuenta: 0,
+            nombre: "",
+            total: 0
         }
     ]
 };
@@ -17,7 +13,8 @@ let ConsultaPDFModel = {
     alias: "PRINT_RECIBO",
     filtros: [
         {
-            id_recibo: '',
+            id_cuenta: 0,
+            id_recibo: ''
         }
     ]
 };
@@ -25,9 +22,35 @@ let ConsultaPDFModel = {
 let option = 0;
 
 $(document).ready(function () {
-    LoginRecibos();
-    ObtenerCuentasRecibosUsuario();
+    AsegurarCuentasUsuario();
 });
+
+function AsegurarCuentasUsuario() {
+    // La lista de cuentas vive en la sesión del servidor y es la que valida
+    // que el usuario solo consulte sus propios recibos.
+    $.ajax({
+        contentType: "application/json; charset=utf-8",
+        url: '/AdministradorDeCuentas/ConsultarCuentasUsuario',
+        type: "POST",
+        data: JSON.stringify({ ID_USUARIO_WEB: 0 }),
+        cache: false,
+        complete: function () {
+            ObtenerCuentasRecibosUsuario();
+        }
+    });
+}
+
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, function (caracter) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[caracter];
+    });
+}
 
 //eventos
 document.addEventListener('DOMContentLoaded', function () {
@@ -87,6 +110,7 @@ $('#SelectCuentaRecibos').on('change', function () {
     let valor = this.value
     if (valor != 0) {
         DatosValidacion.filtros[0].id_cuenta = valor;
+        ConsultaPDFModel.filtros[0].id_cuenta = valor;
         ConsultaRecibos();
     } else {
         renderizarDocumentos(dataRecibos);
@@ -141,6 +165,7 @@ function CargarCuentasSelect(idSelect, data) {
     let valor = $('#SelectCuentaRecibos').val();
     if (valor != 0) {
         DatosValidacion.filtros[0].id_cuenta = valor;
+        ConsultaPDFModel.filtros[0].id_cuenta = valor;
         ConsultaRecibos();
     } else {
         renderizarDocumentos(dataRecibos);
@@ -158,8 +183,8 @@ function crearDocumentoItem(doc) {
                 <i class="far fa-file-pdf"></i>
             </div>
             <div class="document-details">
-                <h3 class="mb-1">${doc.ciclo_facturado}</h3>
-                <p class="mb-0 text-muted">Consumo: ${doc.consumo} • Periodo: ${doc.periodo} </p>
+                <h3 class="mb-1">${escaparHtml(doc.ciclo_facturado)}</h3>
+                <p class="mb-0 text-muted">Consumo: ${escaparHtml(doc.consumo)} • Periodo: ${escaparHtml(doc.periodo)} </p>
             </div>
         </div>
         <!-- Se aplica d-flex, gap-2 y flex-wrap para acomodar los botones. mt-3 separa los botones del texto en móviles -->
@@ -192,11 +217,11 @@ function crearDocumentoItemCard(doc) {
         
         <div class="card-content flex-grow-1">
             <!-- Se cambia <h3> a <h5> para reducir el tamaño del título -->
-            <h5 class="mb-1">${doc.ciclo_facturado}</h5>
+            <h5 class="mb-1">${escaparHtml(doc.ciclo_facturado)}</h5>
             
             <!-- Se agrega la clase 'small' para que el texto descriptivo ocupe menos espacio -->
             <p class="mb-3 text-muted small">
-                Consumo: ${doc.consumo} • Periodo: ${doc.periodo} 
+                Consumo: ${escaparHtml(doc.consumo)} • Periodo: ${escaparHtml(doc.periodo)} 
             </p>
         </div>
         
@@ -234,16 +259,17 @@ function renderizarDocumentos(lista) {
 function asignarEventos(elemento, doc) {
     elemento.querySelector('.btn-view').addEventListener('click', () => {
         const ventanaPDF = window.open('', '_blank');
+        ConsultaPDFModel.filtros[0].id_cuenta = DatosValidacion.filtros[0].id_cuenta;
         ConsultaPDFModel.filtros[0].id_recibo = doc.id_recibo;
         option = 1;
-        GenerarTokenPDF(ventanaPDF);
+        ConsultaReciboPDF(ventanaPDF);
     });
 
     elemento.querySelector('.btn-download').addEventListener('click', () => {
-        //const ventanaPDF = window.open('', '_blank');
-        option = 2;
+        ConsultaPDFModel.filtros[0].id_cuenta = DatosValidacion.filtros[0].id_cuenta;
         ConsultaPDFModel.filtros[0].id_recibo = doc.id_recibo;
-        GenerarTokenPDF();
+        option = 2;
+        ConsultaReciboPDF();
     });
 };
 
@@ -287,41 +313,6 @@ function getTimestamp() {
 }
 
 //AJAX
-function LoginRecibos() {
-    $.ajax({
-        contentType: "application/json; charset=utf-8",
-        url: '/Recibos/LoginRecibos',
-        type: "POST",
-        data: JSON.stringify(objResibos),
-        cache: false,
-        success: function (data) {
-            if (data.ok) { ValidarLoginRecibos(); }
-        },
-        error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
-        }
-    });
-};
-
-
-function ValidarLoginRecibos() {
-    $.ajax({
-        contentType: "application/json; charset=utf-8",
-        url: '/Recibos/ValidarLoginRecibos',
-        type: "POST",
-        data: JSON.stringify(DatosValidacion),
-        cache: false,
-        success: function (data) {
-            if (data.body[0].usrValido) {
-                /*ConsultaRecibos();*/
-            }
-        },
-        error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
-        }
-    });
-};
-
 function ConsultaRecibos() {
     $.ajax({
         contentType: "application/json; charset=utf-8",
@@ -333,29 +324,23 @@ function ConsultaRecibos() {
             if (data.ok) {
                 dataRecibos = data.body.slice(0, 12);
                 renderizarDocumentos(dataRecibos);
+            } else {
+                Swal.fire({
+                    title: "ERROR!!",
+                    text: data.message || 'No fue posible consultar los recibos.',
+                    icon: "error"
+                });
             }
+        },
+        error: function (xhr) {
+            const mensaje = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'No fue posible consultar los recibos.';
+            Swal.fire({ title: "ERROR!!", text: mensaje, icon: "error" });
+        }
+    });
+};
 
-        },
-        error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
-        }
-    });
-};
-function GenerarTokenPDF(ventanaPDF) {
-    $.ajax({
-        contentType: "application/json; charset=utf-8",
-        url: '/Recibos/LoginRecibos',
-        type: "POST",
-        data: JSON.stringify(objResibos),
-        cache: false,
-        success: function (data) {
-            if (data.ok) { ConsultaReciboPDF(ventanaPDF); }
-        },
-        error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
-        }
-    });
-};
 function ConsultaReciboPDF(ventanaPDF) {
     $.ajax({
         contentType: "application/json; charset=utf-8",
@@ -365,7 +350,6 @@ function ConsultaReciboPDF(ventanaPDF) {
         cache: false,
         success: function (data) {
             if (data.ok) {
-                console.log(data);
                 if (option == 1) {
                     const blob = base64ToPdfBlob(data.body);
                     const url = URL.createObjectURL(blob);
@@ -375,12 +359,18 @@ function ConsultaReciboPDF(ventanaPDF) {
                     descargarPDF(data.body, `Recibo_${getTimestamp()}`);
                 }
             } else {
-                let obj = JSON.parse(data.detail);
-                Swal.fire({ title: "ERROR!!", text: `${obj.message}`, icon: "error" });
+                Swal.fire({
+                    title: "ERROR!!",
+                    text: data.message || 'No fue posible generar el recibo.',
+                    icon: "error"
+                });
             }
         },
-        error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
+        error: function (xhr) {
+            const mensaje = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'No fue posible generar el recibo.';
+            Swal.fire({ title: "ERROR!!", text: mensaje, icon: "error" });
         }
     });
 };
@@ -388,18 +378,16 @@ function ConsultaReciboPDF(ventanaPDF) {
 function ObtenerCuentasRecibosUsuario() {
 
     $.ajax({
-        contentType: "application/json; charset=utf-8",
         url: '/Recibos/ObtenerCuentasRecibosUsuario',
-        type: "POST",
-        data: JSON.stringify(),
+        type: "GET",
         cache: false,
         success: function (data) {
-            if (data.length > 0) {
+            if (data && data.length > 0) {
                 CargarCuentasSelect('#SelectCuentaRecibos', data);
             }
         },
         error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
+            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL OBTENER LAS CUENTAS!`, icon: "error" });
         }
     });
 };

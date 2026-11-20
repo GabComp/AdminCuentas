@@ -1,15 +1,9 @@
 ﻿let TxtMailContra = $("#TxtMailContra");
 let TxtMailContraConfirm = $("#TxtMailContraConfirm");
-let chkNoRobot = $("#chkNoRobot");
-let robotError = $("#robotError");
 let btnBackIndex = $("#btnBackIndex");
 let btnContinuarContra = $("#btnContinuarContra");
 
 //objetos
-let objCaptcha = {
-    Bot: false
-}
-
 let objPrepararCorreo = {
     ACCION: '',
     USUARIO: '',
@@ -17,21 +11,16 @@ let objPrepararCorreo = {
     CORREO_ELECTRONICO: '',
     TELEFONO_CEL: '',
     MOTIVO_BAJA: '',
-    ID_USUARIO: '',
+    ID_USUARIO: ''
 };
 
-objDatosRecuperacion = {
-    UserDatos: objPrepararCorreo,
-    BotTest: objCaptcha
+let objDatosRecuperacion = {
+    UserDatos: objPrepararCorreo
 };
 
 //eventos
 btnBackIndex.on('click', () => {
     window.location.href = '/Home/Index';
-});
-
-chkNoRobot.on('click', () => {
-    objDatosRecuperacion.BotTest.Bot = ValidarCaptcha();
 });
 
 btnContinuarContra.on('click', () => {
@@ -51,7 +40,7 @@ btnContinuarContra.on('click', () => {
 });
 
 //funciones
-function ValidarCorreos( Mail, MailConfirm) {
+function ValidarCorreos(Mail, MailConfirm) {
     const regexMail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!Mail.trim()) return 'El Correo es requerido';
@@ -61,30 +50,15 @@ function ValidarCorreos( Mail, MailConfirm) {
     if (!regexMail.test(MailConfirm)) return 'ingrese un correo valido';
     if (Mail !== MailConfirm) return 'el correo no esta confirmado, los Correos no coinciden';
     return true;
-};
-
-function ValidarCaptcha() {
-    if (!chkNoRobot.is(':checked')) {
-        robotError.removeClass('d-none');
-        return false;
-    }
-    robotError.addClass('d-none');
-    return true;
-};
+}
 
 function LimpiarFormularioContras() {
     TxtMailContra.val('');
     TxtMailContraConfirm.val('');
-};
+}
 
 //ajax
 function PrepararRestablecimiento() {
-
-    if (!objDatosRecuperacion.BotTest.Bot) {
-        Swal.fire({ title: "ERROR!!", text: `no ha pasado la prueba de que no es un robot`, icon: "error" });
-        return;
-    }
-
     $.ajax({
         contentType: "application/json; charset=utf-8",
         url: '/Login/Restablecimiento',

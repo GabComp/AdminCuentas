@@ -7,17 +7,13 @@ var tabla;
 
 const img = $("#imgZoom");
 
-let objCuentas = {
-    username: "alexis",
-    password: "1234"
-};
 let objDatosValidacion = {
     alias: "VALIDA_CUENTA",
     filtros: [
         {
-            id_cuenta: 18,
-            nombre: "Abrego Consuelo",
-            total: 1000
+            id_cuenta: 0,
+            nombre: "",
+            total: 0
         }
     ]
 };
@@ -27,7 +23,7 @@ let objConsultarCuentas = {
 let objActionsCuentaUsuario = {
     ACCION: '',
     ID_USUARIO_WEB: 0,
-    CUENTA_COMAPA: 18,
+    CUENTA_COMAPA: 0,
     MOTIVO_BAJA: '',
     ID_IMAGEN_AUTORIZA_PAPERLESS: 0,
     ALIAS_CUENTA: '',
@@ -36,7 +32,6 @@ let objActionsCuentaUsuario = {
 };
 
 $(document).ready(function () {
-    LoginCuentas();
     ConsultarCuentasUsuario();
     $("#txtNombreServicio").on("input", function () {
         $(this).val($(this).val().toUpperCase());
@@ -110,12 +105,8 @@ img.on("mouseleave", function () {
 
 });
 
-$('#tablaCuentas').DataTable({
-    responsive: true,
-    language: {
-        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-MX.json'
-    }
-});
+// La tabla se inicializa en LLenarTabla() con el idioma inline.
+// No cargar el JSON de idioma desde el CDN: bloquea por CORS/CSP.
 
 //$(document).on('click', '.btn-editarCuenta', function () {
 
@@ -189,8 +180,8 @@ function LLenarTabla(data, Tab) {
         searching: false,
         info: false,
         columns: [
-            { "data": "cuentA_COMAPA", "visible": true },
-            { "data": "aliaS_CUENTA", "visible": true },
+            { "data": "CUENTA_COMAPA", "visible": true },
+            { "data": "ALIAS_CUENTA", "visible": true },
             //{
             //    title: 'Editar',
             //    data: null,
@@ -213,7 +204,7 @@ function LLenarTabla(data, Tab) {
                     return `
                         <center><button type="button"
                                 class="btn-eliminarCuenta btn btn-danger"
-                                data-id="${row.cuentA_COMAPA}"
+                                data-id="${row.CUENTA_COMAPA}"
                                 data-tabla="${Tab}">
                             <i class="fas fa-trash"></i>
                         </button></center>`;
@@ -247,22 +238,6 @@ function LLenarTabla(data, Tab) {
 };
 
 //AJAX
-function LoginCuentas() {// obtiene el token 
-    $.ajax({
-        contentType: "application/json; charset=utf-8",
-        url: '/AdministradorDeCuentas/LoginCuentas',
-        type: "POST",
-        data: JSON.stringify(objCuentas),
-        cache: false,
-        success: function (data) {
-            //if (data.ok) { ValidarLoginCuentas();}
-        },
-        error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
-        }
-    });
-};
-
 function ValidarCuentasUsuarios() {
     $.ajax({
         contentType: "application/json; charset=utf-8",
@@ -271,14 +246,17 @@ function ValidarCuentasUsuarios() {
         data: JSON.stringify(objDatosValidacion),
         cache: false,
         success: function (data) {
-            if (data.body[0].usrValido) {
+            if (data.ok && data.body && data.body.length > 0 && data.body[0].usrValido) {
                 ActionsCuentaUsuario();
             } else {
                 Swal.fire({ title: "ERROR!!", text: `NO SE ENCONTRO NINGUNA CUENTA CON LOS DATOS PROPORCIONADOS!`, icon: "error" });
             }
         },
-        error: function () {
-            Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INTENTAR VERIFICAR LA CUENTA!`, icon: "error" });
+        error: function (xhr) {
+            const mensaje = xhr.responseJSON && xhr.responseJSON.message
+                ? xhr.responseJSON.message
+                : 'OCURRIO UN ERROR AL INTENTAR VERIFICAR LA CUENTA!';
+            Swal.fire({ title: "ERROR!!", text: mensaje, icon: "error" });
         }
     });
 };

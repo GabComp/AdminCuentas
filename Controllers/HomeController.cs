@@ -1,24 +1,17 @@
 using AdministradorDeCuentas.Filters;
 using AdministradorDeCuentas.Models;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System.Diagnostics;
-using System.Text;
 
 namespace AdministradorDeCuentas.Controllers
 {
-    
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly IHttpClientFactory _httpClientFactory;
 
-        public HomeController(ILogger<HomeController> logger, IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            _configuration = configuration;
-            _httpClientFactory = httpClientFactory;
         }
 
         public IActionResult Index()
@@ -50,10 +43,7 @@ namespace AdministradorDeCuentas.Controllers
         {
             return View();
         }
-        public IActionResult Mensaje()
-        {
-            return View();
-        }
+
         public IActionResult CambioContrasenia()
         {
             return View();

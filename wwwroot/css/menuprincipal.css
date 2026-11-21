@@ -178,3 +178,59 @@ body {
         font-size: 1.05rem;
     }
 }
+
+/* CTA de reporte de fugas en el menú */
+.menu-fuga {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    max-width: 820px;
+    margin: 2rem auto 0;
+    padding: 1.5rem 1.75rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #691C32 0%, #4D1222 100%);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(105, 28, 50, 0.18);
+}
+
+    .menu-fuga h2 {
+        margin: 0 0 0.35rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .menu-fuga p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+.menu-fuga-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    background-color: #BC955C;
+    color: #4D1222;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+    .menu-fuga-btn:hover {
+        background-color: #a8834a;
+        color: #fff;
+    }
+
+@media (max-width: 640px) {
+    .menu-fuga {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+}

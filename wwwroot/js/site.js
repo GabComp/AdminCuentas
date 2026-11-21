@@ -128,4 +128,28 @@ $(function () {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+
+    // Banner de cookies (esenciales). Se recuerda la aceptación en el navegador.
+    const $cookieBanner = $('#cookieBanner');
+
+    if ($cookieBanner.length) {
+        try {
+            if (localStorage.getItem('comapa-cookies') === '1') {
+                $cookieBanner.prop('hidden', true);
+            } else {
+                $cookieBanner.prop('hidden', false);
+            }
+        } catch (e) {
+            $cookieBanner.prop('hidden', false);
+        }
+
+        $('#btnAceptarCookies').on('click', function () {
+            try {
+                localStorage.setItem('comapa-cookies', '1');
+            } catch (e) {
+                // Sin almacenamiento disponible; se oculta igualmente.
+            }
+            $cookieBanner.prop('hidden', true);
+        });
+    }
 });

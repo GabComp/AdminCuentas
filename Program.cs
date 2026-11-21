@@ -202,6 +202,7 @@ builder.Services.AddRateLimiter(options =>
     AgregarPolitica("registro", 3, TimeSpan.FromMinutes(10));
     AgregarPolitica("restablecimiento", 3, TimeSpan.FromMinutes(15));
     AgregarPolitica("recibos", 60, TimeSpan.FromMinutes(1));
+    AgregarPolitica("reporte-fuga", 5, TimeSpan.FromMinutes(10));
 });
 
 builder.Services.AddHsts(options =>
@@ -251,7 +252,7 @@ app.MapRazorPages();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Inicio}/{id?}");
 
 app.Run();
 
@@ -269,7 +270,6 @@ static string ConstruirCsp(IConfiguration configuration, bool produccion)
         "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
-        "https://cdn.datatables.net",
         "https://*.evopayments.com",
         "https://*.gateway.mastercard.com"
     };
@@ -280,8 +280,7 @@ static string ConstruirCsp(IConfiguration configuration, bool produccion)
         "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
-        "https://fonts.googleapis.com",
-        "https://cdn.datatables.net"
+        "https://fonts.googleapis.com"
     };
 
     var fuentes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -298,7 +297,6 @@ static string ConstruirCsp(IConfiguration configuration, bool produccion)
         "data:",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
-        "https://cdn.datatables.net",
         "https://*.evopayments.com",
         "https://*.gateway.mastercard.com"
     };
@@ -306,7 +304,6 @@ static string ConstruirCsp(IConfiguration configuration, bool produccion)
     var conexiones = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "'self'",
-        "https://cdn.datatables.net",
         "https://*.evopayments.com",
         "https://*.gateway.mastercard.com"
     };

@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Reportar fuga";
+}
+
+@section Styles {
+    <link href="~/css/reporte-fuga.css" asp-append-version="true" rel="stylesheet" />
+}
+
+<section class="fuga-hero">
+    <h1>Reportar fuga o desperfecto</h1>
+    <p>Ayúdanos a atender fugas de agua y daños en la red. Tu reporte llega al área de atención.</p>
+</section>
+
+<div class="fuga-container">
+    <div class="fuga-card">
+        <form id="formFuga" autocomplete="off" novalidate>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label for="fugaNombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="fugaNombre" maxlength="100" placeholder="Tu nombre" required>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label for="fugaTelefono" class="form-label">Teléfono</label>
+                    <input type="tel" class="form-control" id="fugaTelefono" maxlength="10" inputmode="numeric"
+                           placeholder="10 dígitos (opcional)">
+                </div>
+
+                <div class="col-12">
+                    <label for="fugaCorreo" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control" id="fugaCorreo" maxlength="254" placeholder="correo@ejemplo.com (opcional)">
+                </div>
+
+                <div class="col-12">
+                    <label for="fugaTipo" class="form-label">Tipo de reporte</label>
+                    <select id="fugaTipo" class="form-select" required>
+                        <option value="">Selecciona una opción</option>
+                        <option value="FUGA">Fuga de agua</option>
+                        <option value="DESPERFECTO">Desperfecto en la red</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label for="fugaDireccion" class="form-label">Dirección</label>
+                    <input type="text" class="form-control" id="fugaDireccion" maxlength="250" placeholder="Calle y número">
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label for="fugaColonia" class="form-label">Colonia</label>
+                    <input type="text" class="form-control" id="fugaColonia" maxlength="120" placeholder="Colonia">
+                </div>
+
+                <div class="col-12">
+                    <label for="fugaReferencia" class="form-label">Referencia</label>
+                    <input type="text" class="form-control" id="fugaReferencia" maxlength="250" placeholder="Entre calles, punto de referencia, etc.">
+                </div>
+
+                <div class="col-12">
+                    <label for="fugaDescripcion" class="form-label">Descripción del problema</label>
+                    <textarea class="form-control" id="fugaDescripcion" rows="4" maxlength="1000"
+                              placeholder="Describe brevemente la fuga o el daño" required></textarea>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label for="fugaCuenta" class="form-label">Número de cuenta (opcional)</label>
+                    <input type="text" class="form-control" id="fugaCuenta" maxlength="6" inputmode="numeric"
+                           placeholder="Si lo conoces">
+                </div>
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="button" class="btn btn-principal btn-lg" id="btnEnviarFuga">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Enviar reporte
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/ReporteFuga.js?v=@(DateTime.Now.Ticks)"></script>
+}

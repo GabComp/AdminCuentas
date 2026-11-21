@@ -95,6 +95,20 @@
                         Debes abrir y aceptar los Términos y Condiciones
                     </span>
 
+                    <div class="mb-3 d-none" id="grupoCodigoRegistro">
+                        <label for="TxtCodigoRegistro" class="form-label">Código de verificación</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-shield-halved"></i></span>
+                            <input type="text" class="form-control" id="TxtCodigoRegistro"
+                                   placeholder="6 dígitos" maxlength="6" inputmode="numeric"
+                                   autocomplete="one-time-code">
+                        </div>
+                        <div class="form-text">
+                            Enviamos un código a tu correo.
+                            <a href="#" id="btnReenviarCodigo" class="text-decoration-none">Reenviar</a>
+                        </div>
+                    </div>
+
                     <div class="LoginButtons">
                         <button type="button" class="btn btn-login" id="btnRegistrar">
                             <i class="fas fa-user-plus me-2"></i>

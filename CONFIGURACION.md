@@ -190,8 +190,8 @@ El portal no recibe un `resultIndicator` de éxito, por lo que no llama a
 - El token se renderiza en `_AntiforgeryMeta.cshtml` y `site.js` lo envía en la
   cabecera `RequestVerificationToken` para todas las peticiones jQuery.
 - La CSP se construye en `Program.cs` y permite los CDN usados por el portal
-  (Bootstrap, Font Awesome, SweetAlert2, DataTables y Google Fonts), además de
-  los orígenes de EVO.
+  (Bootstrap, Font Awesome, SweetAlert2 y Google Fonts), además de los orígenes
+  de EVO.
 - La CSP usa `'unsafe-inline'` para scripts y estilos porque las vistas todavía
   tienen bloques inline. El siguiente paso es migrar a nonces/hashes y quitarlo.
 - `frame-src` permite `https:` porque el reto 3-D Secure puede abrir marcos de
@@ -209,3 +209,38 @@ El portal no recibe un `resultIndicator` de éxito, por lo que no llama a
 - Exigir JWT/rol en `PagosController`, no solo la API Key.
 - Restringir la API por red (access restrictions / private endpoint / WAF).
 - Enmascarar el nombre en `ObtenAdeudo` y limitar consultas por cuenta/IP.
+
+## Monitoreo y operación
+
+### Health checks
+
+El portal expone:
+
+- `GET /health` — liveness: responde `200` si el proceso está vivo.
+- `GET /health/ready` — readiness: valida la API de compatibilidad y responde
+  `200` o `503` según su estado.
+
+Configurar en App Service **Health check** la ruta `/health` (o `/health/ready`).
+El endpoint de readiness consulta `ApiSettings:BaseUrl + "health"`.
+
+### Secretos en producción
+
+- Usar **Azure Key Vault** (o variables de entorno) para `ApiSettings:*`,
+  `Evo:*`, `Smtp:*` y `ConnectionStrings`. No versionar valores en `appsettings.json`.
+- La API (`ComapaInternet.Api`) usa `ConnectionStrings:Comercial`,
+  `ConnectionStrings:Portal`, `Jwt:Key` y `AppSettings:ApiKey` desde
+  user-secrets / entorno.
+
+### Telemetría (recomendado)
+
+- Habilitar **Application Insights** para logs estructurados, trazas de
+  dependencias y métricas de las solicitudes.
+- Registrar en App Service las alertas de disponibilidad sobre `/health`.
+
+### Pruebas y CI
+
+- Proyecto de pruebas: `AdministradorDeCuentas.Tests` (xUnit).
+  - Ejecutar: `dotnet test AdministradorDeCuentas.sln`.
+- CI: `.github/workflows/ci.yml` (GitHub Actions): restaura, compila y ejecuta
+  las pruebas en cada push/PR.
+

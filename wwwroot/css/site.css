@@ -1460,3 +1460,62 @@ img {
         border-radius: 25px; /* Estilo de bot�n alargado como la referencia */
     }
 }
+
+/* ==========================================================================
+   Banner de cookies
+   ========================================================================== */
+.cookie-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 14px 20px;
+    background-color: var(--color-gob-guinda-dark, #4D1222);
+    color: #fff;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.18);
+}
+
+    .cookie-banner[hidden] {
+        display: none;
+    }
+
+    .cookie-banner p {
+        flex: 1 1 auto;
+        margin: 0;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .cookie-banner a {
+        color: var(--color-gob-dorado, #BC955C);
+        text-decoration: underline;
+    }
+
+.cookie-banner-btn {
+    flex: 0 0 auto;
+    padding: 8px 18px;
+    border: 1px solid var(--color-gob-dorado, #BC955C);
+    border-radius: 999px;
+    background-color: var(--color-gob-dorado, #BC955C);
+    color: #4D1222;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .cookie-banner-btn:hover {
+        background-color: transparent;
+        color: #fff;
+    }
+
+@media (max-width: 576px) {
+    .cookie-banner {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+}

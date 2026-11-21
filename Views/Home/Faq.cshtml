@@ -1,0 +1,131 @@
+@{
+    ViewData["Title"] = "Preguntas frecuentes";
+}
+
+@section Styles {
+    <link href="~/css/faq.css" asp-append-version="true" rel="stylesheet" />
+}
+
+<section class="faq-hero">
+    <h1>Preguntas frecuentes</h1>
+    <p>Resolvemos las dudas más comunes sobre el portal y los servicios en línea.</p>
+</section>
+
+<div class="faq-container">
+    <div class="accordion" id="faqAcordeon">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true">
+                    ¿Cómo creo mi cuenta en el portal?
+                </button>
+            </h2>
+            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    Ingresa a “Registrarse”, completa tus datos y confirma tu correo con el código de
+                    verificación que te enviamos.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                    ¿Cómo vinculo mi cuenta de agua?
+                </button>
+            </h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    En “Administrar cuenta”, selecciona “Registrar Cuenta”, ingresa el número de cuenta, el
+                    nombre tal como aparece en tu recibo y el importe del recibo más reciente. Confirmarás la
+                    acción con un código enviado a tu correo.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                    ¿Cómo pago mi recibo en línea?
+                </button>
+            </h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    Entra a “Pago en línea”, escribe tu número de cuenta y consulta tu adeudo. Después elige el
+                    pago con tarjeta y sigue las instrucciones de la pasarela.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                    ¿Cómo descargo un recibo?
+                </button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    Inicia sesión y ve a “Consultar recibos”. Ahí puedes ver o descargar en PDF los recibos de tus
+                    cuentas vinculadas.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                    ¿Olvidé mi contraseña, qué hago?
+                </button>
+            </h2>
+            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    Usa la opción “¿Olvidaste tu contraseña?” en el inicio de sesión. Te enviaremos una contraseña
+                    temporal a tu correo para que la cambies.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                    ¿Qué es la constancia de no adeudo?
+                </button>
+            </h2>
+            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    Es un documento que acredita que no tienes adeudos. Consulta los requisitos y descarga la
+                    documentación en la sección “Hoja de no adeudo”. El trámite se concluye en sucursal.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                    ¿Mi pago se refleja de inmediato?
+                </button>
+            </h2>
+            <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    El correo de confirmación es informativo. El comprobante oficial se refleja en la sección
+                    “Consultar recibos” una vez que el pago queda aplicado.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                    ¿Dónde puedo pedir ayuda?
+                </button>
+            </h2>
+            <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAcordeon">
+                <div class="accordion-body">
+                    Llámanos al (834) 318 7200 o acude a nuestras oficinas: Zitácuaro #205, Col. Burócratas State,
+                    Cd. Victoria, Tamaulipas.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

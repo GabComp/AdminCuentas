@@ -71,13 +71,10 @@ function ObtenerCuentasHojaAdeudo() {
         success: function (data) {
             if (data && data.length > 0) {
                 CargarCuentasSelect('#SelectCuentaHojaAdeudo', data);
+                $('#avisoCuentasHoja').addClass('d-none');
             } else {
                 $('#SelectCuentaHojaAdeudo').prop('disabled', true);
-                Swal.fire({
-                    title: "Sin cuentas",
-                    text: "No tienes cuentas vinculadas. Agrega una en Administrar Cuenta.",
-                    icon: "info"
-                });
+                $('#avisoCuentasHoja').removeClass('d-none');
             }
         },
         error: function () {

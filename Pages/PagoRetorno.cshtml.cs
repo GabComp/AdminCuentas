@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using AdministradorDeCuentas.Models.PagoEnLinea;
 using AdministradorDeCuentas.Services;
+using PrototipoComapa.Extensions;
+using PrototipoComapa.Utilerias;
+using static PrototipoComapa.Models.UsuarioWeb.UsuarioWebModel;
 
 namespace AdministradorDeCuentas.Pages
 {
@@ -13,17 +16,20 @@ namespace AdministradorDeCuentas.Pages
         private readonly EvoPaymentService _evo;
         private readonly RecibosApiService _recibos;
         private readonly IConfiguration _configuration;
+        private readonly EmailService _emailService;
         private readonly ILogger<PagoRetornoModel> _logger;
 
         public PagoRetornoModel(
             EvoPaymentService evo,
             RecibosApiService recibos,
             IConfiguration configuration,
+            EmailService emailService,
             ILogger<PagoRetornoModel> logger)
         {
             _evo = evo;
             _recibos = recibos;
             _configuration = configuration;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -253,6 +259,24 @@ namespace AdministradorDeCuentas.Pages
                 JsonSerializer.Serialize(completado));
 
             HttpContext.Session.Remove("PagoPendiente");
+
+            // Comprobante informativo por correo, solo si conocemos un correo
+            // del usuario en sesión. No bloquea la confirmación del pago.
+            var usuarioSesion = HttpContext.Session.GetObject<objReponse>("UsuarioSesion");
+            var correoPago = usuarioSesion?.CORREO?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(correoPago))
+            {
+                _ = _emailService.SendEmailAsync(
+                    correoPago,
+                    "Comprobante de pago en línea",
+                    EmailTemplates.PagoComprobante(
+                        completado.Nombre,
+                        completado.Cuenta,
+                        completado.Importe,
+                        completado.Folio,
+                        completado.Fecha));
+            }
 
             return RedirectToPage("/PagoCompletado");
         }

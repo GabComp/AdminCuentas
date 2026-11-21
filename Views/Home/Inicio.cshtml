@@ -1,0 +1,95 @@
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+@section Styles {
+    <link href="~/css/landing.css" asp-append-version="true" rel="stylesheet" />
+}
+
+<!-- HERO -->
+<section class="landing-hero">
+    <div class="landing-hero-inner">
+        <span class="landing-eyebrow"><i class="fa-solid fa-droplet"></i> COMAPA Victoria</span>
+        <h1>Portal de servicios de agua potable</h1>
+        <p>
+            Consulta tu adeudo, paga en línea, descarga tus recibos y administra tus cuentas
+            desde un solo lugar, de forma rápida y segura.
+        </p>
+        <div class="landing-cta">
+            <a href="/pago-en-linea" class="landing-btn landing-btn-primary">
+                <i class="fa-solid fa-credit-card"></i> Pagar en línea
+            </a>
+            <a asp-controller="Home" asp-action="Index" class="landing-btn landing-btn-outline">
+                <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+            </a>
+            <a asp-controller="Home" asp-action="ReporteFuga" class="landing-btn landing-btn-outline">
+                <i class="fa-solid fa-droplet"></i> Reportar fuga
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICIOS -->
+<section class="landing-section">
+    <h2 class="landing-section-title">Servicios disponibles</h2>
+    <div class="landing-grid">
+        <a href="/pago-en-linea" class="landing-card">
+            <i class="fa-solid fa-credit-card"></i>
+            <h3>Pago en línea</h3>
+            <p>Consulta tu adeudo y paga con tarjeta de forma segura.</p>
+        </a>
+        <a asp-controller="Recibos" asp-action="Recibos" class="landing-card">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+            <h3>Consultar recibos</h3>
+            <p>Revisa tu historial y descarga tus recibos en PDF.</p>
+        </a>
+        <a asp-controller="AdministradorDeCuentas" asp-action="AdministradorDeCuentas" class="landing-card">
+            <i class="fa-solid fa-users-gear"></i>
+            <h3>Administrar cuenta</h3>
+            <p>Vincula y administra tus cuentas de servicio.</p>
+        </a>
+        <a asp-controller="HojaAdeudo" asp-action="HojaAdeudo" class="landing-card">
+            <i class="fa-solid fa-file-circle-check"></i>
+            <h3>Constancia de no adeudo</h3>
+            <p>Consulta los requisitos y descarga la documentación.</p>
+        </a>
+    </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="landing-section landing-steps">
+    <h2 class="landing-section-title">¿Cómo funciona?</h2>
+    <div class="landing-steps-grid">
+        <div class="landing-step">
+            <span class="landing-step-num">1</span>
+            <h3>Crea tu cuenta</h3>
+            <p>Regístrate y confirma tu correo con el código de verificación.</p>
+        </div>
+        <div class="landing-step">
+            <span class="landing-step-num">2</span>
+            <h3>Vincula tu cuenta</h3>
+            <p>Asocia tu cuenta de agua con el nombre del recibo y el importe.</p>
+        </div>
+        <div class="landing-step">
+            <span class="landing-step-num">3</span>
+            <h3>Consulta y paga</h3>
+            <p>Descarga recibos, consulta tu adeudo y paga en línea.</p>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACTO -->
+<section class="landing-contact">
+    <div class="landing-contact-item">
+        <i class="fa-solid fa-phone"></i>
+        <span><b>Atención</b> (834) 318 7200</span>
+    </div>
+    <div class="landing-contact-item">
+        <i class="fa-solid fa-location-dot"></i>
+        <span><b>Dirección</b> Zitácuaro #205, Col. Burócratas State, Cd. Victoria</span>
+    </div>
+    <div class="landing-contact-item">
+        <i class="fa-solid fa-clock"></i>
+        <span><b>Horario</b> Lunes a viernes, 8:00 a 16:00 h</span>
+    </div>
+</section>

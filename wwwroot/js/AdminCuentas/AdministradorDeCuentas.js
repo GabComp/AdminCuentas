@@ -3,9 +3,25 @@ let txtNombreServicio = $("#txtNombreServicio");
 let txtTotalPagar = $("#txtTotalPagar");
 let txtNombreCorto = $("#txtNombreCorto");
 let btnRegistrarServicio = $("#btnRegistrarServicio");
-var tabla;
+let txtCodigoVinculacion = $("#txtCodigoVinculacion");
+let grupoCodigoVinculacion = $("#grupoCodigoVinculacion");
+let btnReenviarCodigoVinculacion = $("#btnReenviarCodigoVinculacion");
+
+let etapaVinculacion = 'datos';
 
 const img = $("#imgZoom");
+
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, function (caracter) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[caracter];
+    });
+}
 
 let objDatosValidacion = {
     alias: "VALIDA_CUENTA",
@@ -39,8 +55,12 @@ $(document).ready(function () {
 });
 //eventos
 btnRegistrarServicio.on('click', function () {
-    if (ValidarFormularioCuenta() === 'valido') {
-        //console.log('Formulario válido');
+    if (etapaVinculacion === 'datos') {
+        if (ValidarFormularioCuenta() !== 'valido') {
+            Swal.fire({ title: "ERROR!!", text: `${ValidarFormularioCuenta()}`, icon: "error" });
+            return;
+        }
+
         objActionsCuentaUsuario.ACCION = 'ALTA';
         objActionsCuentaUsuario.CUENTA_COMAPA = txtNumeroServicio.val();
         objActionsCuentaUsuario.Nombre_Propietario = txtNombreServicio.val();
@@ -49,11 +69,96 @@ btnRegistrarServicio.on('click', function () {
         objDatosValidacion.filtros[0].id_cuenta = txtNumeroServicio.val();
         objDatosValidacion.filtros[0].nombre = txtNombreServicio.val();
         objDatosValidacion.filtros[0].total = txtTotalPagar.val();
-        ValidarCuentasUsuarios();
-    } else {
-        Swal.fire({ title: "ERROR!!", text: `${ValidarFormularioCuenta()}`, icon: "error" });
+
+        EnviarOtpVinculacion();
+        return;
     }
+
+    // Etapa código: verificar OTP y completar el vínculo.
+    const codigo = txtCodigoVinculacion.val().trim();
+    if (!/^\d{6}$/.test(codigo)) {
+        Swal.fire({ title: "ERROR!!", icon: "error", text: "Ingresa el código de 6 dígitos." });
+        return;
+    }
+
+    objActionsCuentaUsuario.CODIGO = codigo;
+    ValidarCuentasUsuarios();
 });
+
+btnReenviarCodigoVinculacion.on('click', function (e) {
+    e.preventDefault();
+    EnviarOtpVinculacion();
+});
+
+txtCodigoVinculacion.on('input', function () {
+    this.value = this.value.replace(/[^0-9]/g, '').substring(0, 6);
+});
+
+function resetVinculacion() {
+    etapaVinculacion = 'datos';
+    grupoCodigoVinculacion.addClass('d-none');
+    txtCodigoVinculacion.val('');
+    btnRegistrarServicio.text('Registrar');
+    objActionsCuentaUsuario.CODIGO = '';
+
+    [txtNumeroServicio, txtNombreServicio, txtTotalPagar, txtNombreCorto].forEach(function (el) {
+        el.prop('disabled', false);
+    });
+}
+
+function EnviarOtpVinculacion() {
+    btnRegistrarServicio.prop('disabled', true);
+
+    $.ajax({
+        contentType: "application/json; charset=utf-8",
+        url: '/AdministradorDeCuentas/EnviarOtpVinculacion',
+        type: "POST",
+        data: JSON.stringify({}),
+        cache: false,
+        success: function (data) {
+            if (data && data.exito) {
+                etapaVinculacion = 'codigo';
+                grupoCodigoVinculacion.removeClass('d-none');
+                txtCodigoVinculacion.focus();
+                btnRegistrarServicio.text('Verificar y vincular');
+
+                [txtNumeroServicio, txtNombreServicio, txtTotalPagar, txtNombreCorto].forEach(function (el) {
+                    el.prop('disabled', true);
+                });
+
+                if (data.codigoDepuracion) {
+                    Swal.fire({
+                        title: 'Código (solo desarrollo)',
+                        text: `Tu código es: ${data.codigoDepuracion}`,
+                        icon: 'info',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Código enviado',
+                        text: data.mensaje || 'Revisa tu correo.',
+                        icon: 'success',
+                        timer: 2500,
+                        showConfirmButton: false
+                    });
+                }
+
+                btnRegistrarServicio.prop('disabled', false);
+            } else {
+                btnRegistrarServicio.prop('disabled', false);
+                Swal.fire({
+                    title: "ERROR!!",
+                    text: (data && data.mensaje) || 'No fue posible enviar el código.',
+                    icon: "error"
+                });
+            }
+        },
+        error: function () {
+            btnRegistrarServicio.prop('disabled', false);
+            Swal.fire({ title: "ERROR!!", text: 'OCURRIÓ UN ERROR AL ENVIAR EL CÓDIGO.', icon: "error" });
+        }
+    });
+}
 
 $("#btnMostrarRegistro").click(function () {
 
@@ -109,8 +214,7 @@ img.on("mouseleave", function () {
 
 });
 
-// La tabla se inicializa en LLenarTabla() con el idioma inline.
-// No cargar el JSON de idioma desde el CDN: bloquea por CORS/CSP.
+// La tabla se renderiza en LLenarTabla() sin dependencias externas.
 
 //$(document).on('click', '.btn-editarCuenta', function () {
 
@@ -164,83 +268,38 @@ function LimpiarFormularioCuenta() {
     txtNombreCorto.val('');
 }
 
-//tablas
-function LLenarTabla(data, Tab) { 
+// Tabla de cuentas (render simple, sin dependencias externas)
+function LLenarTabla(data) {
+    const tbody = document.querySelector('#tablaCuentas tbody');
+    if (!tbody) return;
 
-    if ($.fn.DataTable.isDataTable(`#${Tab}`)) {
-        //$(`#${Tab}`).DataTable().clear().destroy();
-        $(`#${Tab}`).DataTable().clear().destroy();
+    tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td colspan="3" class="text-center text-muted py-4">
+                No tienes cuentas vinculadas. Usa "Registrar Cuenta" para agregar una.
+            </td>`;
+        tbody.appendChild(fila);
+        return;
     }
 
-    tabla = $(`#${Tab}`).DataTable({
-        "bLengthChange": false,
-        scrollX: false,
-        data: data,
-        paging: false,
-        ordering: false,
-        select: false,
-        "autoWidth": false,
-        order: [],
-        pageLength: 7,
-        searching: false,
-        info: false,
-        columns: [
-            { "data": "CUENTA_COMAPA", "visible": true },
-            { "data": "ALIAS_CUENTA", "visible": true },
-            //{
-            //    title: 'Editar',
-            //    data: null,
-            //    orderable: false,
-            //    render: function (data, type, row) {
-            //        return `
-            //            <center><button type="button"
-            //                    class="btn-editarCuenta btn btn-primary"
-            //                    data-id='${JSON.stringify(row)}'
-            //                    data-tabla="${Tab}">
-            //                <i class="fas fa-edit"></i>
-            //            </button></center>`;
-            //    }
-            //},
-            {
-                title: 'Eliminar',
-                data: null,
-                orderable: false,
-                render: function (data, type, row) {
-                    return `
-                        <center><button type="button"
-                                class="btn-eliminarCuenta btn btn-danger btn-sm"
-                                data-id="${row.CUENTA_COMAPA}"
-                                data-tabla="${Tab}"
-                                title="Eliminar cuenta ${row.CUENTA_COMAPA}"
-                                aria-label="Eliminar cuenta ${row.CUENTA_COMAPA}">
-                            <i class="fas fa-trash"></i>
-                        </button></center>`;
-                }
-            }
-        ], 
-        columnDefs: [
-
-        ],
-        language: {
-            "decimal": "",
-            "emptyTable": "No hay información",
-            "info": "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-            "infoEmpty": "Mostrando 0 to 0 of 0 Entradas",
-            "infoFiltered": "(Filtrado de _MAX_ total entradas)",
-            "infoPostFix": "",
-            "thousands": ",",
-            "lengthMenu": "Mostrar _MENU_ Entradas",
-            "loadingRecords": "Cargando...",
-            "processing": "Procesando...",
-            "search": "Buscar:",
-            "zeroRecords": "Sin resultados encontrados",
-            "paginate": {
-                "first": "Primero",
-                "last": "Ultimo",
-                "next": "<i class='mdi mdi-chevron-right'>",
-                "previous": "<i class='mdi mdi-chevron-left'>"
-            }
-        },
+    data.forEach(cuenta => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>${escaparHtml(cuenta.CUENTA_COMAPA)}</td>
+            <td>${escaparHtml(cuenta.ALIAS_CUENTA)}</td>
+            <td class="text-center">
+                <button type="button"
+                        class="btn-eliminarCuenta btn btn-danger btn-sm"
+                        data-id="${escaparHtml(cuenta.CUENTA_COMAPA)}"
+                        title="Eliminar cuenta ${escaparHtml(cuenta.CUENTA_COMAPA)}"
+                        aria-label="Eliminar cuenta ${escaparHtml(cuenta.CUENTA_COMAPA)}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>`;
+        tbody.appendChild(fila);
     });
 };
 
@@ -256,6 +315,8 @@ function ValidarCuentasUsuarios() {
             if (data.ok && data.body && data.body.length > 0 && data.body[0].usrValido) {
                 ActionsCuentaUsuario();
             } else {
+                resetVinculacion();
+                btnRegistrarServicio.prop('disabled', false);
                 Swal.fire({ title: "ERROR!!", text: `NO SE ENCONTRO NINGUNA CUENTA CON LOS DATOS PROPORCIONADOS!`, icon: "error" });
             }
         },
@@ -263,6 +324,8 @@ function ValidarCuentasUsuarios() {
             const mensaje = xhr.responseJSON && xhr.responseJSON.message
                 ? xhr.responseJSON.message
                 : 'OCURRIO UN ERROR AL INTENTAR VERIFICAR LA CUENTA!';
+            resetVinculacion();
+            btnRegistrarServicio.prop('disabled', false);
             Swal.fire({ title: "ERROR!!", text: mensaje, icon: "error" });
         }
     });
@@ -278,7 +341,7 @@ function ConsultarCuentasUsuario() {
         success: function (data) {
             if (data.exito) {
                 //console.log(data);
-                LLenarTabla(data.datos, 'tablaCuentas');
+                LLenarTabla(data.datos);
             } else {
                 //Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
             }
@@ -300,15 +363,20 @@ function ActionsCuentaUsuario() {
         cache: false,
         success: function (data) {
             if (data.exito) {
-                ConsultarCuentasUsuario()
-                Swal.fire({ title: "Aviso", text: `Accion: realizada con exito !!`, icon: "success" });
+                ConsultarCuentasUsuario();
+                Swal.fire({ title: "Aviso", text: `Acción realizada con éxito.`, icon: "success" });
                 LimpiarFormularioCuenta();
+                resetVinculacion();
                 if (windowChange) { $("#btnMostrarTabla").trigger("click"); }
             } else {
+                resetVinculacion();
+                btnRegistrarServicio.prop('disabled', false);
                 Swal.fire({ title: "ERROR!!", text: `${data.mensaje}`, icon: "error" });
             }
         },
         error: function () {
+            resetVinculacion();
+            btnRegistrarServicio.prop('disabled', false);
             Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL INICIAE SESION!`, icon: "error" });
         }
     });

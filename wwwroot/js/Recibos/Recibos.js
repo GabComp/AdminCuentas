@@ -21,8 +21,26 @@ let ConsultaPDFModel = {
 
 let option = 0;
 
+const RECIBOS_POR_PAGINA = 6;
+let paginaActual = 1;
+
 $(document).ready(function () {
     AsegurarCuentasUsuario();
+
+    $('#btnRecibosAnterior').on('click', function () {
+        if (paginaActual > 1) {
+            paginaActual--;
+            renderizarDocumentos();
+        }
+    });
+
+    $('#btnRecibosSiguiente').on('click', function () {
+        const totalPaginas = Math.ceil(dataRecibos.length / RECIBOS_POR_PAGINA);
+        if (paginaActual < totalPaginas) {
+            paginaActual++;
+            renderizarDocumentos();
+        }
+    });
 });
 
 function AsegurarCuentasUsuario() {
@@ -94,7 +112,7 @@ $('#SelectCuentaRecibos').on('change', function () {
         ConsultaPDFModel.filtros[0].id_cuenta = valor;
         ConsultaRecibos();
     } else {
-        renderizarDocumentos(dataRecibos);
+        renderizarDocumentos();
     }
 });
 
@@ -149,7 +167,7 @@ function CargarCuentasSelect(idSelect, data) {
         ConsultaPDFModel.filtros[0].id_cuenta = valor;
         ConsultaRecibos();
     } else {
-        renderizarDocumentos(dataRecibos);
+        renderizarDocumentos();
     }
 };
 
@@ -251,13 +269,36 @@ function actualizarVistasRecibos(mostrar) {
     cardView.style.display = verLista ? 'none' : 'block';
 }
 
-function renderizarDocumentos(lista) {
+function actualizarPaginacion() {
+    const contenedorPaginacion = document.getElementById('recibosPaginacion');
+    if (!contenedorPaginacion) return;
+
+    const totalPaginas = Math.max(1, Math.ceil(dataRecibos.length / RECIBOS_POR_PAGINA));
+
+    if (dataRecibos.length <= RECIBOS_POR_PAGINA) {
+        contenedorPaginacion.classList.add('d-none');
+        return;
+    }
+
+    contenedorPaginacion.classList.remove('d-none');
+    document.getElementById('btnRecibosAnterior').disabled = paginaActual <= 1;
+    document.getElementById('btnRecibosSiguiente').disabled = paginaActual >= totalPaginas;
+    document.getElementById('recibosInfo').textContent = `Página ${paginaActual} de ${totalPaginas}`;
+}
+
+function renderizarDocumentos() {
+    const totalPaginas = Math.max(1, Math.ceil(dataRecibos.length / RECIBOS_POR_PAGINA));
+    if (paginaActual > totalPaginas) paginaActual = totalPaginas;
+
+    const inicio = (paginaActual - 1) * RECIBOS_POR_PAGINA;
+    const vista = dataRecibos.slice(inicio, inicio + RECIBOS_POR_PAGINA);
+
     const contenedor = document.querySelector('.document-list');
     contenedor.innerHTML = '';
     const contenedorCard = document.querySelector('.document-cards');
     contenedorCard.innerHTML = '';
 
-    lista.forEach(doc => {
+    vista.forEach(doc => {
         const item = crearDocumentoItem(doc);
         contenedor.appendChild(item);
         const itemCard = crearDocumentoItemCard(doc);
@@ -265,7 +306,7 @@ function renderizarDocumentos(lista) {
     });
 
     const estado = document.getElementById('estadoRecibos');
-    const hayDocumentos = lista.length > 0;
+    const hayDocumentos = dataRecibos.length > 0;
 
     actualizarVistasRecibos(hayDocumentos);
 
@@ -276,6 +317,8 @@ function renderizarDocumentos(lista) {
             mostrarEstadoRecibos('No hay recibos disponibles para esta cuenta.', 'fa-file-circle-xmark', false);
         }
     }
+
+    actualizarPaginacion();
 };
 
 function asignarEventos(elemento, doc) {
@@ -344,8 +387,9 @@ function ConsultaRecibos() {
         cache: false,
         success: function (data) {
             if (data.ok) {
-                dataRecibos = data.body.slice(0, 12);
-                renderizarDocumentos(dataRecibos);
+                dataRecibos = data.body || [];
+                paginaActual = 1;
+                renderizarDocumentos();
             } else {
                 actualizarVistasRecibos(false);
                 mostrarEstadoRecibos('No fue posible consultar los recibos de esta cuenta.', 'fa-circle-exclamation', false);

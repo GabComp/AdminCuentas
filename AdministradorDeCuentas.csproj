@@ -11,4 +11,12 @@
     <PackageReference Include="MailKit" Version="4.18.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Evita que el proyecto principal compile el proyecto de pruebas. -->
+    <Compile Remove="AdministradorDeCuentas.Tests\**" />
+    <Content Remove="AdministradorDeCuentas.Tests\**" />
+    <EmbeddedResource Remove="AdministradorDeCuentas.Tests\**" />
+    <None Remove="AdministradorDeCuentas.Tests\**" />
+  </ItemGroup>
+
 </Project>

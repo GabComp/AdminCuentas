@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Hosting;
 using PrototipoComapa.Extensions;
 using PrototipoComapa.Utilerias;
 using System.Net;
@@ -14,22 +16,34 @@ namespace PrototipoComapa.Controllers
 {
     public class LoginController : Controller
     {
+        private const string PrefijoOtpRegistro = "otp-registro:";
+        private const int OtpTtlMinutos = 10;
+        private const int OtpMaxIntentos = 5;
+
+        private sealed record OtpRegistro(string Codigo, DateTime Expira, int Intentos);
+
         private readonly HttpClient _ApiClient;
         private readonly IConfiguration _configuration;
         //private string ENDPOINT_API = "https://financiero.comapavictoria.gob.mx/";
         //private string ENDPOINT_API = "http://192.168.1.70:62863/api";
         private readonly ILogger<LoginController> _logger;
         private readonly EmailService _emailService;
+        private readonly IMemoryCache _cache;
+        private readonly IHostEnvironment _entorno;
 
         public LoginController(
             ILogger<LoginController> logger,
             IHttpClientFactory factory,
             IConfiguration configuration,
-            EmailService emailService)
+            EmailService emailService,
+            IMemoryCache cache,
+            IHostEnvironment entorno)
         {
             _logger = logger;
             _configuration = configuration;
             _emailService = emailService;
+            _cache = cache;
+            _entorno = entorno;
             _ApiClient = factory.CreateClient("ApiGeneralClient");
         }
 
@@ -237,6 +251,42 @@ namespace PrototipoComapa.Controllers
                     }
                 }
 
+                // El registro (ALTA) exige confirmar el correo con un código OTP.
+                if (accion == "ALTA")
+                {
+                    if (string.IsNullOrWhiteSpace(request.CODIGO) ||
+                        !Regex.IsMatch(request.CODIGO.Trim(), @"^\d{6}$"))
+                    {
+                        return ErrorGenerico("El código de verificación es requerido.");
+                    }
+
+                    var correoNormalizado = NormalizarCorreo(request.CORREO_ELECTRONICO);
+                    var claveOtp = PrefijoOtpRegistro + correoNormalizado;
+
+                    if (!_cache.TryGetValue<OtpRegistro>(claveOtp, out var otp) ||
+                        otp is null ||
+                        otp.Expira < DateTime.UtcNow)
+                    {
+                        return ErrorGenerico("El código de verificación es inválido o expiró. Solicita uno nuevo.");
+                    }
+
+                    if (!string.Equals(otp.Codigo, request.CODIGO.Trim(), StringComparison.Ordinal))
+                    {
+                        var nuevosIntentos = otp.Intentos + 1;
+                        _cache.Set(claveOtp, otp with { Intentos = nuevosIntentos }, TimeSpan.FromMinutes(OtpTtlMinutos));
+
+                        return ErrorGenerico(
+                            nuevosIntentos >= OtpMaxIntentos
+                                ? "Demasiados intentos. Solicita un nuevo código."
+                                : "El código de verificación es incorrecto.");
+                    }
+
+                    _cache.Remove(claveOtp);
+
+                    // El código ya se validó; no debe viajar al backend.
+                    request.CODIGO = string.Empty;
+                }
+
                 var apiRequest = new ApiRequest
                 {
                     Application = "LoginServicios",
@@ -315,6 +365,21 @@ namespace PrototipoComapa.Controllers
                         transaction.TransactionMessage ?? "No fue posible completar la operación.");
                 }
 
+                if (accion == "ALTA")
+                {
+                    var correoBienvenida = request.CORREO_ELECTRONICO?.Trim();
+                    if (!string.IsNullOrWhiteSpace(correoBienvenida))
+                    {
+                        // El envío es informativo y no bloquea el registro.
+                        _ = _emailService.SendEmailAsync(
+                            correoBienvenida,
+                            "Bienvenido al portal de COMAPA Victoria",
+                            EmailTemplates.Bienvenida(
+                                request.USUARIO?.Trim() ?? string.Empty,
+                                correoBienvenida));
+                    }
+                }
+
                 return Json(new UsuarioWebRegistroResponse
                 {
                     Exito = true,
@@ -327,6 +392,49 @@ namespace PrototipoComapa.Controllers
                 _logger.LogError(ex, "Error inesperado en la operación {Accion}.", accion);
                 return ErrorGenerico("No fue posible completar la operación. Intenta de nuevo.");
             }
+        }
+
+        [HttpPost]
+        [EnableRateLimiting("registro")]
+        public async Task<JsonResult> EnviarCodigoRegistro([FromBody] EnivoCorreoRequest? userRequest)
+        {
+            var correo = userRequest?.UserDatos?.CORREO_ELECTRONICO?.Trim();
+
+            if (string.IsNullOrWhiteSpace(correo) ||
+                correo.Length > 254 ||
+                !Regex.IsMatch(correo, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                return Json(new { exito = false, mensaje = "El correo electrónico no es válido." });
+            }
+
+            var codigo = GenerarCodigoOtp();
+            var claveOtp = PrefijoOtpRegistro + NormalizarCorreo(correo);
+            var otp = new OtpRegistro(codigo, DateTime.UtcNow.AddMinutes(OtpTtlMinutos), 0);
+
+            _cache.Set(claveOtp, otp, TimeSpan.FromMinutes(OtpTtlMinutos));
+
+            var envio = await _emailService.SendEmailAsync(
+                correo,
+                "Código de verificación",
+                EmailTemplates.CodigoVerificacion(codigo));
+
+            if (!envio.Exito)
+            {
+                _logger.LogWarning(
+                    "No se pudo enviar el código de verificación a {Correo}: {Mensaje}.",
+                    correo,
+                    envio.Mensaje);
+            }
+
+            // En desarrollo se expone el código para poder probar el flujo sin SMTP.
+            var codigoDepuracion = _entorno.IsDevelopment() ? codigo : null;
+
+            return Json(new
+            {
+                exito = true,
+                mensaje = "Enviamos un código de verificación a tu correo.",
+                codigoDepuracion
+            });
         }
 
         [HttpPost]
@@ -485,6 +593,12 @@ namespace PrototipoComapa.Controllers
             }
         }
         
+        private static string NormalizarCorreo(string correo) =>
+            (correo ?? string.Empty).Trim().ToLowerInvariant();
+
+        private static string GenerarCodigoOtp() =>
+            RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+
         [HttpGet]
         public  JsonResult CargarDatosUsuario()
         {

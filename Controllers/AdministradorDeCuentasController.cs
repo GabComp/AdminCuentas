@@ -1,34 +1,56 @@
 ﻿using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using AdministradorDeCuentas.Filters;
 using AdministradorDeCuentas.Models.APIRecibos;
 using AdministradorDeCuentas.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Hosting;
+using PrototipoComapa.Extensions;
+using PrototipoComapa.Utilerias;
 using static AdministradorDeCuentas.Models.API.Transactions.CunetaUsuariosTransaction;
 using static APIPipas.Models.CuentaUsuarios.CuentaUsuarios;
 using static PrototipoComapa.Models.API.Transactions.UsuarioWebTransactions;
+using static PrototipoComapa.Models.UsuarioWeb.UsuarioWebModel;
 
 namespace AdministradorDeCuentas.Controllers
 {
     [ValidarSesion]
     public class AdministradorDeCuentasController : Controller
     {
+        private const string PrefijoOtpVinculacion = "otp-vinculacion:";
+        private const int OtpTtlMinutos = 10;
+        private const int OtpMaxIntentos = 5;
+
+        private sealed record OtpVinculacion(string Codigo, DateTime Expira, int Intentos);
+
         private readonly IConfiguration _configuration;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly RecibosAuthService _auth;
+        private readonly EmailService _emailService;
+        private readonly IMemoryCache _cache;
+        private readonly IHostEnvironment _entorno;
         private readonly ILogger<AdministradorDeCuentasController> _logger;
 
         public AdministradorDeCuentasController(
             IConfiguration configuration,
             IHttpClientFactory httpClientFactory,
             RecibosAuthService auth,
+            EmailService emailService,
+            IMemoryCache cache,
+            IHostEnvironment entorno,
             ILogger<AdministradorDeCuentasController> logger)
         {
             _configuration = configuration;
             _httpClientFactory = httpClientFactory;
             _auth = auth;
+            _emailService = emailService;
+            _cache = cache;
+            _entorno = entorno;
             _logger = logger;
         }
 
@@ -225,6 +247,53 @@ namespace AdministradorDeCuentas.Controllers
 
         [HttpPost]
         [EnableRateLimiting("recibos")]
+        public async Task<JsonResult> EnviarOtpVinculacion()
+        {
+            if (!TryObtenerIdUsuarioSesion(out var idUsuarioWeb))
+            {
+                return Json(new { exito = false, mensaje = "La sesión expiró. Inicia sesión nuevamente." });
+            }
+
+            var usuario = HttpContext.Session.GetObject<objReponse>("UsuarioSesion");
+            var correo = usuario?.CORREO?.Trim();
+
+            if (string.IsNullOrWhiteSpace(correo))
+            {
+                return Json(new { exito = false, mensaje = "No tienes un correo registrado para recibir el código." });
+            }
+
+            var codigo = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+            var clave = PrefijoOtpVinculacion + idUsuarioWeb;
+            _cache.Set(
+                clave,
+                new OtpVinculacion(codigo, DateTime.UtcNow.AddMinutes(OtpTtlMinutos), 0),
+                TimeSpan.FromMinutes(OtpTtlMinutos));
+
+            var envio = await _emailService.SendEmailAsync(
+                correo,
+                "Código de verificación",
+                EmailTemplates.CodigoVerificacion(codigo));
+
+            if (!envio.Exito)
+            {
+                _logger.LogWarning(
+                    "No se pudo enviar el código de vinculación a {Correo}: {Mensaje}.",
+                    correo,
+                    envio.Mensaje);
+            }
+
+            var codigoDepuracion = _entorno.IsDevelopment() ? codigo : null;
+
+            return Json(new
+            {
+                exito = true,
+                mensaje = "Enviamos un código de verificación a tu correo.",
+                codigoDepuracion
+            });
+        }
+
+        [HttpPost]
+        [EnableRateLimiting("recibos")]
         public async Task<IActionResult> ActionsCuentaUsuario([FromBody] ACTIONS_USUARIO_WEB_CUENTA? request)
         {
             if (request is null)
@@ -273,6 +342,54 @@ namespace AdministradorDeCuentas.Controllers
 
             try
             {
+                // El vínculo (ALTA) exige confirmación con un código enviado al
+                // correo verificado del usuario del portal.
+                if (accion == "ALTA")
+                {
+                    if (string.IsNullOrWhiteSpace(request.CODIGO) ||
+                        !Regex.IsMatch(request.CODIGO.Trim(), @"^\d{6}$"))
+                    {
+                        return Json(new ActionsCuentasResponse
+                        {
+                            Exito = false,
+                            Mensaje = "El código de verificación es requerido.",
+                            Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                        });
+                    }
+
+                    var claveOtp = PrefijoOtpVinculacion + idUsuarioWeb;
+
+                    if (!_cache.TryGetValue<OtpVinculacion>(claveOtp, out var otp) ||
+                        otp is null ||
+                        otp.Expira < DateTime.UtcNow)
+                    {
+                        return Json(new ActionsCuentasResponse
+                        {
+                            Exito = false,
+                            Mensaje = "El código es inválido o expiró. Solicita uno nuevo.",
+                            Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                        });
+                    }
+
+                    if (!string.Equals(otp.Codigo, request.CODIGO.Trim(), StringComparison.Ordinal))
+                    {
+                        var nuevosIntentos = otp.Intentos + 1;
+                        _cache.Set(claveOtp, otp with { Intentos = nuevosIntentos }, TimeSpan.FromMinutes(OtpTtlMinutos));
+
+                        return Json(new ActionsCuentasResponse
+                        {
+                            Exito = false,
+                            Mensaje = nuevosIntentos >= OtpMaxIntentos
+                                ? "Demasiados intentos. Solicita un nuevo código."
+                                : "El código de verificación es incorrecto.",
+                            Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                        });
+                    }
+
+                    _cache.Remove(claveOtp);
+                    request.CODIGO = string.Empty;
+                }
+
                 if (accion == "ALTA")
                 {
                     // No se confía en que el navegador haya llamado antes a ValidarCuentasUsuarios.
@@ -402,6 +519,22 @@ namespace AdministradorDeCuentas.Controllers
                         Mensaje = transaction.TransactionMessage ?? "No fue posible completar la operación.",
                         Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
                     });
+                }
+
+                if (accion == "ALTA")
+                {
+                    var usuarioSesion = HttpContext.Session.GetObject<objReponse>("UsuarioSesion");
+                    var correo = usuarioSesion?.CORREO?.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(correo))
+                    {
+                        _ = _emailService.SendEmailAsync(
+                            correo,
+                            "Cuenta vinculada al portal",
+                            EmailTemplates.CuentaVinculada(
+                                usuarioSesion?.NOMBRE ?? string.Empty,
+                                request.CUENTA_COMAPA));
+                    }
                 }
 
                 return Json(new ActionsCuentasResponse

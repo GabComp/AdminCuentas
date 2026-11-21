@@ -20,10 +20,10 @@
 
     var inicioUrl = autenticado
         ? Url.Action("Menu", "Home")
-        : Url.Action("Index", "Home");
+        : Url.Action("Inicio", "Home");
     var claseInicio = autenticado
         ? ClaseActiva("Home", "Menu")
-        : (string.Equals(controlador, "Home", StringComparison.OrdinalIgnoreCase) && !enPrivacidad ? " active" : string.Empty);
+        : (string.Equals(accion, "Inicio", StringComparison.OrdinalIgnoreCase) ? " active" : string.Empty);
 }
 
 <!-- Barra Superior Institucional (Top Bar) -->

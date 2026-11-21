@@ -3,7 +3,6 @@
 }
 
 @section Styles {
-    <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet" />
     <link href="~/css/AdministrarCuentas/AdministradorDeCuentas.css" asp-append-version="true" rel="stylesheet" />
 }
 
@@ -113,6 +112,21 @@
                                placeholder="Ej. Casa" required maxlength="20" />
                     </div>
 
+                    <!-- CÓDIGO DE VERIFICACIÓN -->
+                    <div class="mb-3 d-none" id="grupoCodigoVinculacion">
+                        <label for="txtCodigoVinculacion" class="form-label">Código de verificación</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-shield-halved"></i></span>
+                            <input type="text" class="form-control" id="txtCodigoVinculacion"
+                                   placeholder="6 dígitos" maxlength="6" inputmode="numeric"
+                                   autocomplete="one-time-code">
+                        </div>
+                        <div class="form-text">
+                            Enviamos un código a tu correo.
+                            <a href="#" id="btnReenviarCodigoVinculacion" class="text-decoration-none">Reenviar</a>
+                        </div>
+                    </div>
+
                     <div class="d-grid">
                         <button type="button" class="btn btn-principal btn-lg" id="btnRegistrarServicio">
                             Registrar
@@ -183,7 +197,5 @@
 </div> *@
 
 @section Scripts {
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="~/js/AdminCuentas/AdministradorDeCuentas.js?v=@(DateTime.Now.Ticks)"></script>
-
 }

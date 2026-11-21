@@ -43,6 +43,7 @@ namespace APIPipas.Models.CuentaUsuarios
             public string ALIAS_CUENTA { get; set; } = string.Empty;
             public string Nombre_Propietario { get; set; } = string.Empty;
             public decimal PAGO_TOTAL { get; set; }
+            public string CODIGO { get; set; } = string.Empty;
         }
 
         public class ActionsCuentasResponse

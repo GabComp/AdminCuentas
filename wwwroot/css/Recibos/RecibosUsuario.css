@@ -216,6 +216,44 @@
         cursor: not-allowed;
     }
 
+.recibos-paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+    .recibos-paginacion span {
+        color: #4a5568;
+        font-size: 0.88rem;
+        min-width: 120px;
+        text-align: center;
+    }
+
+.btn-page {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    border: 1px solid #d7dce2;
+    border-radius: 8px;
+    color: var(--color-gob-guinda, #691C32);
+    transition: all 0.2s ease;
+}
+
+    .btn-page:hover:not(:disabled) {
+        border-color: var(--color-gob-dorado, #BC955C);
+        background-color: var(--color-gob-dorado-light, #F7F3EC);
+    }
+
+    .btn-page:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
 @media (max-width: 768px) {
     .header {
         margin-bottom: 20px;

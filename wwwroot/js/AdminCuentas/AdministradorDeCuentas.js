@@ -62,11 +62,13 @@ $("#btnMostrarRegistro").click(function () {
 
     $("#btnMostrarRegistro")
         .removeClass("btn-outline-secondary")
-        .addClass("btn-principal");
+        .addClass("btn-principal")
+        .attr("aria-pressed", "true");
 
     $("#btnMostrarTabla")
         .removeClass("btn-principal")
-        .addClass("btn-outline-secondary");
+        .addClass("btn-outline-secondary")
+        .attr("aria-pressed", "false");
 
 });
 
@@ -77,11 +79,13 @@ $("#btnMostrarTabla").click(function () {
 
     $("#btnMostrarTabla")
         .removeClass("btn-outline-secondary")
-        .addClass("btn-principal");
+        .addClass("btn-principal")
+        .attr("aria-pressed", "true");
 
     $("#btnMostrarRegistro")
         .removeClass("btn-principal")
-        .addClass("btn-outline-secondary");
+        .addClass("btn-outline-secondary")
+        .attr("aria-pressed", "false");
 
 });
 
@@ -173,6 +177,7 @@ function LLenarTabla(data, Tab) {
         scrollX: false,
         data: data,
         paging: false,
+        ordering: false,
         select: false,
         "autoWidth": false,
         order: [],
@@ -203,9 +208,11 @@ function LLenarTabla(data, Tab) {
                 render: function (data, type, row) {
                     return `
                         <center><button type="button"
-                                class="btn-eliminarCuenta btn btn-danger"
+                                class="btn-eliminarCuenta btn btn-danger btn-sm"
                                 data-id="${row.CUENTA_COMAPA}"
-                                data-tabla="${Tab}">
+                                data-tabla="${Tab}"
+                                title="Eliminar cuenta ${row.CUENTA_COMAPA}"
+                                aria-label="Eliminar cuenta ${row.CUENTA_COMAPA}">
                             <i class="fas fa-trash"></i>
                         </button></center>`;
                 }

@@ -5,7 +5,6 @@ let TxtPass = $("#TxtPass");
 let btnIniciarSession = $("#btnIniciarSession");
 let btnRegistrarse = $("#btnRegistrarse");
 //let btnOmitir = $("#btnOmitir");
-let perfiLink = $("#perfiLink");
 
 let objConsultarCuentas = {
     ID_USUARIO_WEB: 0,
@@ -14,7 +13,6 @@ let objConsultarCuentas = {
 $(document).ready(function () {
     //localStorage.clear();
     CerrarSesion();
-    $("#perfiLink").hide();
 
     setTimeout(() => {
         TxtPass.val('');

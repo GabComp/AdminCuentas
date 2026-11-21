@@ -10,7 +10,7 @@
     --color-white: #FFFFFF;*/
     /* Glow para focus con dorado transparente */
     /*--focus-glow: rgba(188, 149, 92, 0.25);*/
-    /* Asignación de Tema (Claro por defecto) */
+    /* Asignaciï¿½n de Tema (Claro por defecto) */
     /*--bg-body: var(--color-bg-light);
     --bg-form-section: var(--color-white);
     --text-primary: var(--color-text-main);
@@ -28,7 +28,7 @@
     background-color: #f8f9fa;*/ /* Gris muy clarito para el fondo */
 /*}*/
 
-/* Efectos hover para los enlaces del menú */
+/* Efectos hover para los enlaces del menï¿½ */
 /*.custom-nav-link {
     transition: all 0.2s ease-in-out;
     border-radius: 0.5rem;
@@ -41,7 +41,7 @@
         transform: translateY(-1px);
     }*/
 
-/* Mejoras para el menú desplegable del perfil */
+/* Mejoras para el menï¿½ desplegable del perfil */
 /*.dropdown-menu {
     animation: fadeIn 0.3s ease;
 }
@@ -55,10 +55,10 @@
     }
 
     .dropdown-item.text-danger:hover {
-        background-color: #ffeef0;*/ /* Fondo rojizo suave al pasar el mouse sobre cerrar sesión */
+        background-color: #ffeef0;*/ /* Fondo rojizo suave al pasar el mouse sobre cerrar sesiï¿½n */
     /*}*/
 
-/* Animación suave al abrir dropdowns */
+/* Animaciï¿½n suave al abrir dropdowns */
 /*@keyframes fadeIn {
     from {
         opacity: 0;
@@ -93,7 +93,7 @@ html {
 
 
 /* ==========================================================================
-   VARIABLES DE COLOR E INSTITUCIONALES (Gobierno de México / COMAPA)
+   VARIABLES DE COLOR E INSTITUCIONALES (Gobierno de Mï¿½xico / COMAPA)
    ========================================================================== */
 :root {
     --color-gob-guinda: #691C32; /* Guinda principal institucional */
@@ -126,10 +126,10 @@ body {
 }
 
 /* ==========================================================================
-   TIPOGRAFÍA GLOBAL (COMAPA Victoria)
+   TIPOGRAFï¿½A GLOBAL (COMAPA Victoria)
    ========================================================================== */
 
-/* 1. Fuente base para todo el texto de la página, botones e insumos */
+/* 1. Fuente base para todo el texto de la pï¿½gina, botones e insumos */
 body,
 p,
 span,
@@ -148,7 +148,7 @@ button,
     font-family: 'Open Sans', sans-serif !important;
 }
 
-/* 2. Fuente para títulos, encabezados y el logotipo */
+/* 2. Fuente para tï¿½tulos, encabezados y el logotipo */
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6,
 .navbar-brand,
@@ -162,6 +162,38 @@ h1, h2, h3, h4, h5, h6,
     max-width: 1240px;
     margin: 0 auto;
     padding: 0 20px;
+}
+
+.main-content {
+    margin-top: 40px;
+    min-height: 80vh;
+}
+
+@media (max-width: 576px) {
+    .main-content {
+        margin-top: 24px;
+    }
+}
+
+/* Estado vacÃ­o reutilizable */
+.empty-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: #718096;
+    background-color: var(--color-white);
+    border: 1px dashed #CBD5E0;
+    border-radius: 10px;
+}
+
+.empty-state i {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 2rem;
+    color: var(--color-gob-dorado);
+}
+
+.empty-state p {
+    margin: 0;
 }
 
 /* ==========================================================================
@@ -196,7 +228,7 @@ h1, h2, h3, h4, h5, h6,
         color: var(--color-gob-dorado);
     }
 
-/* Quitar el color azul por defecto del teléfono */
+/* Quitar el color azul por defecto del telï¿½fono */
 .top-phone {
     color: var(--color-white, #ffffff);
     text-decoration: none;
@@ -227,8 +259,12 @@ h1, h2, h3, h4, h5, h6,
         color: var(--color-white);
         opacity: 0.85;
         transition: var(--transition-fast);
-        display: flex;
+        display: inline-flex;
         align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 4px;
     }
 
         .social-links-top a:hover {
@@ -242,8 +278,27 @@ h1, h2, h3, h4, h5, h6,
     height: 16px;
 }
 
+@media (max-width: 768px) {
+    .top-bar-content {
+        gap: 8px;
+    }
+
+    .gob-tag,
+    .top-phone {
+        font-size: 0.72rem;
+    }
+
+    .social-links-top {
+        display: none;
+    }
+
+    .top-bar-right {
+        gap: 0;
+    }
+}
+
 /* ==========================================================================
-   NAVEGACIÓN PRINCIPAL
+   NAVEGACIï¿½N PRINCIPAL
    ========================================================================== */
 .header-comapa {
     position: sticky;
@@ -272,7 +327,7 @@ h1, h2, h3, h4, h5, h6,
     display: block;
 }
 
-/* Lista del Menú */
+/* Lista del Menï¿½ */
 .nav-list {
     display: flex;
     list-style: none;
@@ -304,18 +359,33 @@ h1, h2, h3, h4, h5, h6,
     transition: transform 0.2s ease;
 }
 
+#nombreUsuarioBadge {
+    display: inline-block;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 /* Hover en Enlaces Primarios */
-.nav-item:hover > .nav-link {
+.nav-item:hover > .nav-link,
+.nav-link.active {
     color: var(--color-gob-guinda);
     background-color: var(--color-gob-dorado-light);
 }
 
-.nav-item:hover .arrow {
+.nav-link.active {
+    box-shadow: inset 0 -3px 0 var(--color-gob-dorado);
+}
+
+.nav-item:hover .arrow,
+.nav-item.open .arrow {
     transform: rotate(180deg);
 }
 
 /* ==========================================================================
-   MENÚ DESPLEGABLE (DROPDOWN)
+   MENï¿½ DESPLEGABLE (DROPDOWN)
    ========================================================================== */
 .dropdown-menu {
     display: block !important; /* Anula el display:none por defecto de Bootstrap */
@@ -335,24 +405,31 @@ h1, h2, h3, h4, h5, h6,
     transition: var(--transition-fast);
 }
 
-/* Mostrar menú al pasar el ratón en versión escritorio */
-.nav-item:hover > .dropdown-menu {
+/* Mostrar menï¿½ al pasar el ratï¿½n en versiï¿½n escritorio */
+.nav-item:hover > .dropdown-menu,
+.nav-item.open > .dropdown-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
-.dropdown-menu li a {
+.dropdown-menu li a,
+.dropdown-menu li .dropdown-item {
     display: block;
+    width: 100%;
     padding: 10px 18px;
     font-size: 0.85rem;
     color: var(--color-text-main);
+    background-color: transparent;
+    border: 0;
+    text-align: left;
     text-decoration: none;
     transition: var(--transition-fast);
     border-left: 3px solid transparent;
 }
 
-    .dropdown-menu li a:hover {
+    .dropdown-menu li a:hover,
+    .dropdown-menu li .dropdown-item:hover {
         background-color: var(--color-gob-dorado-light);
         color: var(--color-gob-guinda);
         border-left-color: var(--color-gob-guinda);
@@ -364,7 +441,7 @@ h1, h2, h3, h4, h5, h6,
     color: var(--color-gob-guinda);
 }
 
-/* Botón Destacado "Pagar Recibo" */
+/* Botï¿½n Destacado "Pagar Recibo" */
 .btn-pago-main {
     background-color: var(--color-gob-guinda);
     color: var(--color-white) !important;
@@ -385,7 +462,7 @@ h1, h2, h3, h4, h5, h6,
         color: var(--color-white);
     }
 
-/* Botón Hamburguesa (Móviles) */
+/* Botï¿½n Hamburguesa (Mï¿½viles) */
 .mobile-toggle {
     display: none;
     background: none;
@@ -393,6 +470,7 @@ h1, h2, h3, h4, h5, h6,
     cursor: pointer;
     flex-direction: column;
     gap: 5px;
+    padding: 6px;
 }
 
     .mobile-toggle .bar {
@@ -400,10 +478,23 @@ h1, h2, h3, h4, h5, h6,
         height: 3px;
         background-color: var(--color-gob-guinda);
         border-radius: 2px;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+
+    .mobile-toggle.active .bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+    }
+
+    .mobile-toggle.active .bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-toggle.active .bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
     }
 
 /* ==========================================================================
-   DISEÑO RESPONSIVO (PANTALLAS PEQUEÑAS)
+   DISEï¿½O RESPONSIVO (PANTALLAS PEQUEï¿½AS)
    ========================================================================== */
 @media (max-width: 992px) {
     .mobile-toggle {
@@ -439,7 +530,7 @@ h1, h2, h3, h4, h5, h6,
     }
 
     .dropdown-menu {
-        display: none !important; /* Ocultar por defecto en móvil */
+        display: none !important; /* Ocultar por defecto en mï¿½vil */
         position: static;
         opacity: 1;
         visibility: visible;
@@ -450,7 +541,7 @@ h1, h2, h3, h4, h5, h6,
         width: 100%;
     }
 
-    /* Regla vinculada a tu site.js cuando se hace clic en móvil */
+    /* Regla vinculada a tu site.js cuando se hace clic en mï¿½vil */
     .nav-item.open > .dropdown-menu {
         display: block !important;
     }
@@ -468,7 +559,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ==========================================================================
-   SECCIÓN HERO / BANNER
+   SECCIï¿½N HERO / BANNER
    ========================================================================== */
 .hero-section {
     background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
@@ -636,11 +727,11 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .card-icon-wrapper img {
-    width: 42px; /* Ícono más grande y proporcionado al círculo */
+    width: 42px; /* ï¿½cono mï¿½s grande y proporcionado al cï¿½rculo */
     height: 42px;
     border-radius: 100%;
     object-fit: contain; /* Evita que la imagen se deforme */
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Transición fluida con efecto "rebote" */
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Transiciï¿½n fluida con efecto "rebote" */
 }
 
 .card-icon {
@@ -681,7 +772,7 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* ==========================================================================
-   CENTRO DE AYUDA / INFORMACIÓN RÁPIDA
+   CENTRO DE AYUDA / INFORMACIï¿½N Rï¿½PIDA
    ========================================================================== */
 .quick-info-section {
     background-color: var(--color-white);
@@ -748,6 +839,18 @@ h1, h2, h3, h4, h5, h6,
     margin-top: 40px;
 }
 
+.main-footer a {
+    color: var(--color-gob-dorado);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: var(--transition-fast);
+}
+
+.main-footer a:hover {
+    color: var(--color-white);
+    text-decoration: underline;
+}
+
 .footer-top {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -774,11 +877,14 @@ h1, h2, h3, h4, h5, h6,
     margin-top: 8px;
 }
 
-.footer-col h4 {
+.footer-col h4,
+.footer-heading {
     font-family: var(--font-heading);
     font-size: 1rem;
     color: var(--color-gob-dorado);
     margin-bottom: 15px;
+    margin-top: 0;
+    font-weight: 700;
 }
 
 .footer-col ul {
@@ -870,7 +976,7 @@ h1, h2, h3, h4, h5, h6,
     }
 
 /* ==========================================================================
-   ESTILOS PARA PÁGINAS DE CONTENIDO INSTITUCIONAL
+   ESTILOS PARA Pï¿½GINAS DE CONTENIDO INSTITUCIONAL
    ========================================================================== */
 .page-header {
     background-color: var(--color-gob-guinda);
@@ -1176,7 +1282,7 @@ h1, h2, h3, h4, h5, h6,
         }
 
 /* ==========================================================================
-   INTEGRACIÓN Y SOBREESCRITURA DE BOOTSTRAP 5 (ESTRUCTURA Y ORGANIGRAMA)
+   INTEGRACIï¿½N Y SOBREESCRITURA DE BOOTSTRAP 5 (ESTRUCTURA Y ORGANIGRAMA)
    ========================================================================== */
 
 /* Colores de marca sobreescribiendo clases utilitarias de Bootstrap */
@@ -1193,7 +1299,7 @@ h1, h2, h3, h4, h5, h6,
     color: var(--color-gob-guinda) !important;
 }
 
-/* Acordeón de Bootstrap adaptado a la identidad */
+/* Acordeï¿½n de Bootstrap adaptado a la identidad */
 .accordion-button:not(.collapsed) {
     color: var(--color-gob-guinda) !important;
     background-color: var(--color-gob-dorado-light) !important;
@@ -1214,13 +1320,13 @@ h1, h2, h3, h4, h5, h6,
     background-color: var(--color-gob-guinda-dark) !important;
 }
 
-/* Reducción de margen inferior por defecto de imágenes si aplica */
+/* Reducciï¿½n de margen inferior por defecto de imï¿½genes si aplica */
 img {
     max-width: 100%;
     height: auto;
 }
 
-/* Eliminar margen inferior en listas de navegación y menús desplegables */
+/* Eliminar margen inferior en listas de navegaciï¿½n y menï¿½s desplegables */
 .navbar-nav,
 .nav-list,
 .dropdown-menu,
@@ -1229,7 +1335,7 @@ img {
     padding-bottom: 0 !important;
 }
 
-/* Tarjetas del Consejo de Administración */
+/* Tarjetas del Consejo de Administraciï¿½n */
 .style-cargo {
     color: var(--color-gob-dorado);
     font-size: 0.75rem;
@@ -1288,10 +1394,10 @@ img {
     }
 
 /* ==========================================================================
-   CORRECCIÓN Y AJUSTE PARA EL MENÚ MÓVIL
+   CORRECCIï¿½N Y AJUSTE PARA EL MENï¿½ Mï¿½VIL
    ========================================================================== */
 @media (max-width: 992px) {
-    /* Asegurar que la lista móvil despliegue en columna correctamente */
+    /* Asegurar que la lista mï¿½vil despliegue en columna correctamente */
     .nav-list {
         position: absolute;
         top: 80px;
@@ -1315,7 +1421,7 @@ img {
         width: 100%;
     }
 
-    /* Estilo limpio para los enlaces del menú móvil */
+    /* Estilo limpio para los enlaces del menï¿½ mï¿½vil */
     .nav-list .nav-link {
         width: 100%;
         padding: 14px 20px !important;
@@ -1339,7 +1445,7 @@ img {
         background-color: var(--color-gob-dorado-light) !important;
     }
 
-    /* Botón de pago dentro del menú móvil */
+    /* Botï¿½n de pago dentro del menï¿½ mï¿½vil */
     .nav-btn-wrapper {
         padding: 15px 20px;
         width: 100%;
@@ -1351,6 +1457,6 @@ img {
         width: 100%;
         text-align: center;
         padding: 12px;
-        border-radius: 25px; /* Estilo de botón alargado como la referencia */
+        border-radius: 25px; /* Estilo de botï¿½n alargado como la referencia */
     }
 }

@@ -1,80 +1,84 @@
 ﻿@{
-    ViewData["Title"] = "Documentos Disponibles";
+    ViewData["Title"] = "Constancia de no Adeudo";
 }
 
-<link href="~/css/Recibos/RecibosUsuario.css" rel="stylesheet" />
-<style>
-    .document-cards {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: flex-start;
-    }
-
-    .document-card {
-        flex: 0 0 100%; /* En móvil, ocupa todo el ancho */
-        max-width: 100%;
-        /* resto de estilos */
-    }
-
-    /* En tablet y escritorio */
-    @@media (min-width: 576px) {
-        .document-card {
-            flex: 0 0 calc(50% - 1rem);
-            max-width: calc(50% - 1rem);
+@section Styles {
+    <link href="~/css/Recibos/RecibosUsuario.css" asp-append-version="true" rel="stylesheet" />
+    <style>
+        .requisitos-list {
+            padding-left: 1.1rem;
+            margin-bottom: 0;
         }
-    }
 
-    @@media (min-width: 992px) {
-        .document-card {
-            flex: 0 0 calc(33.333% - 1rem);
-            max-width: calc(33.333% - 1rem);
+        .requisitos-list li {
+            margin-bottom: 0.55rem;
+            color: #4a5568;
         }
-    }
-</style>
-    <header class="header">
-        <div class="container">
-            <h1>Tramitar Constancia de no Adeudo</h1>
-            
+
+        .costo-tramite {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background-color: var(--color-gob-dorado-light, #F7F3EC);
+            color: var(--color-gob-guinda, #691C32);
+            font-weight: 600;
+        }
+    </style>
+}
+
+<header class="header">
+    <div>
+        <h1>Constancia de no Adeudo</h1>
+        <p>Revisa los requisitos y descarga los términos del trámite.</p>
+    </div>
+</header>
+
+<main>
+    <div class="row align-items-end gy-3 justify-content-between mb-2">
+        <div class="col-12 col-md-5">
+            <label for="SelectCuentaHojaAdeudo" class="form-label">Selecciona una cuenta:</label>
+            <select id="SelectCuentaHojaAdeudo" class="form-select">
+                <option value="0">Selecciona un número de cuenta</option>
+            </select>
         </div>
-    </header>
 
-   @*  <ul style="list-style: none;">
-        <p>Asegurate de contar con todos los rquisitos</p>
-        <li>1 - Estar al corriente con  sus pagos, (Sin traslado de saldo)</li>
-        <li>2 -	COPIA DE IDENTIFICACION OFICIAL DEL PROPIETARIO</li>
-        <li>3-	EN CASO DE QUE EL CONTRATO NO ESTE A SU NOMBRE ACREDITAR LA PROPIEDAD (COPIA DE ESCRITURAS O SENTENCIA ACREDITANDOLO COMO ALBACEA).</li>
-        <li>4-	EN CASO DE QUE OTRA PERSONA SE PRESENTE A SOLICITARLA DEBERA PRESENTAR COPIA DE IDENTIFICACION OFICIAL Y UNA CARTA PODER SIMPLE.</li>
-        <li>5-	FORMATO DE SOLICITUD LLENO, YA SEA PARA NOTARIO O A QUIEN CORRESPONDA.</li>
-        <li>6-	EL COSTO DEL TRAMITE ES DE $204.00</li>
-        <li>7-	LA TOMA DEBERA CONTAR CON MEDIDOR EN BUEN FUNCIONAMIENTO.</li>
-    </ul> *@
+        <div class="col-12 col-md-auto gap-2 justify-content-center justify-content-md-end d-none" id="divButtonDownload">
+            <button type="button" class="btn btn-download" id="BtnDownload" aria-label="Descargar términos y condiciones del trámite">
+                <i class="fas fa-file-download"></i>
+                <span>Descargar términos</span>
+            </button>
+        </div>
+    </div>
 
-    <main class="container">
-        <!-- Opción para cambiar entre vista de lista o tarjetas -->
-        <div class="row align-items-end gy-3 justify-content-between mb-2">
-            <!-- Select: ocupa todo el ancho en móvil (col-12) y 3-4 columnas en escritorio (col-md-4 o col-md-3) -->
-            <div class="col-12 col-md-4">
-                <label for="SelectCuentaHojaAdeudo" class="form-label">Selecciona una cuenta:</label>
-                <select id="SelectCuentaHojaAdeudo" class="form-select">
-                    <option value="0">Selecciona un numero de cuenta</option>
-                </select>
-            </div>
-
-            <!-- Botones: en móvil se alinean al centro, en escritorio a la derecha -->
-            <div class="col-12 col-md-auto d-flex gap-2 justify-content-center justify-content-md-end" id="divButtonDownload" style="display:none;">
-                <button class="toggle-btn active" id="BtnDownload">
-                    @* <i class="fas fa-file-download"></i> *@
-                    <span>Pagar documento</span>
-                </button>
+    <div class="row g-4 mt-1">
+        <div class="col-12 col-lg-7">
+            <div class="documents-section h-100">
+                <h2 class="section-title">Requisitos</h2>
+                <ul class="requisitos-list">
+                    <li>Estar al corriente con sus pagos, sin traslado de saldo.</li>
+                    <li>Copia de identificación oficial del propietario.</li>
+                    <li>Si el contrato no está a su nombre, acreditar la propiedad (escrituras o sentencia).</li>
+                    <li>Si otra persona realiza el trámite, deberá presentar identificación oficial y carta poder simple.</li>
+                    <li>Formato de solicitud lleno, para notario o a quien corresponda.</li>
+                    <li>La toma deberá contar con medidor en buen funcionamiento.</li>
+                </ul>
             </div>
         </div>
-        <hr />
 
-    </main>
+        <div class="col-12 col-lg-5">
+            <div class="documents-section h-100">
+                <h2 class="section-title">Antes de iniciar</h2>
+                <p class="text-muted mb-2">
+                    Selecciona la cuenta vinculada para habilitar la descarga de los términos y condiciones.
+                    El trámite se concluye en la sucursal.
+                </p>
+                <span class="costo-tramite">Costo del trámite: $204.00</span>
+            </div>
+        </div>
+    </div>
+</main>
 
-    @section Scripts {
-        @* <script src="~/js/Recibos/Recibos.js?v=@(DateTime.Now.Ticks)"></script> *@
-        <script src="~/js/HojaAdeudo/HojaAdeudo.js?v=@(DateTime.Now.Ticks)"></script>
-
-    }
+@section Scripts {
+    <script src="~/js/HojaAdeudo/HojaAdeudo.js?v=@(DateTime.Now.Ticks)"></script>
+}

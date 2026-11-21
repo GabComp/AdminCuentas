@@ -129,9 +129,11 @@ function CargarDatosUsuario() {
 };
 
 function CerrarSesion() {
-    $.get('/Login/CerrarSesion', function (resp) {
+    $.post('/Login/CerrarSesion', function (resp) {
         if (resp.ok) {
             window.location.href = '/Home/Index';
         }
+    }).fail(function () {
+        window.location.href = '/Home/Index';
     });
 }

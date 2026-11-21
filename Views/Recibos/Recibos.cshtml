@@ -1,45 +1,46 @@
 ﻿@{
-    ViewData["Title"] = "Documentos Disponibles";
+    ViewData["Title"] = "Consultar Recibos";
 }
 
-<link href="~/css/Recibos/RecibosUsuario.css" rel="stylesheet" />
-<style>
-    .document-cards {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: flex-start;
-    }
-
-    .document-card {
-        flex: 0 0 100%; /* En móvil, ocupa todo el ancho */
-        max-width: 100%;
-        /* resto de estilos */
-    }
-
-    /* En tablet y escritorio */
-    @@media (min-width: 576px) {
-        .document-card {
-            flex: 0 0 calc(50% - 1rem);
-            max-width: calc(50% - 1rem);
+@section Styles {
+    <link href="~/css/Recibos/RecibosUsuario.css" asp-append-version="true" rel="stylesheet" />
+    <style>
+        .document-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: flex-start;
         }
-    }
 
-    @@media (min-width: 992px) {
         .document-card {
-            flex: 0 0 calc(33.333% - 1rem);
-            max-width: calc(33.333% - 1rem);
+            flex: 0 0 100%; /* En móvil, ocupa todo el ancho */
+            max-width: 100%;
         }
-    }
-</style>
+
+        /* En tablet y escritorio */
+        @@media (min-width: 576px) {
+            .document-card {
+                flex: 0 0 calc(50% - 1rem);
+                max-width: calc(50% - 1rem);
+            }
+        }
+
+        @@media (min-width: 992px) {
+            .document-card {
+                flex: 0 0 calc(33.333% - 1rem);
+                max-width: calc(33.333% - 1rem);
+            }
+        }
+    </style>
+}
     <header class="header">
-        <div class="container">
-            <h1>Historial de Consumo - Recibos</h1>
-            <p>Accede y descarga tus documentos de manera sencilla</p>
+        <div>
+            <h1>Consultar Recibos</h1>
+            <p>Historial de consumo y descarga de documentos en PDF</p>
         </div>
     </header>
 
-    <main class="container">
+    <main>
         <!-- Opción para cambiar entre vista de lista o tarjetas -->
         <div class="row align-items-end gy-3 justify-content-between mb-2">
             <!-- Select: ocupa todo el ancho en móvil (col-12) y 3-4 columnas en escritorio (col-md-4 o col-md-3) -->
@@ -51,19 +52,23 @@
 
             <!-- Botones: en móvil se alinean al centro, en escritorio a la derecha -->
             <div class="col-12 col-md-auto d-flex gap-2 justify-content-center justify-content-md-end">
-                <button class="toggle-btn active" id="listViewBtn">
+                <button type="button" class="toggle-btn active" id="listViewBtn" aria-label="Vista de lista" title="Vista de lista" aria-pressed="true" disabled>
                     <i class="fas fa-list"></i>
-                    @* Vista de Lista *@
                 </button>
-                <button class="toggle-btn" id="cardViewBtn">
+                <button type="button" class="toggle-btn" id="cardViewBtn" aria-label="Vista de tarjetas" title="Vista de tarjetas" aria-pressed="false" disabled>
                     <i class="fas fa-th-large"></i>
-                    @* Vista de Tarjetas *@
                 </button>
             </div>
         </div>
 
+        <!-- ESTADO VACÍO / CARGA -->
+        <div id="estadoRecibos" class="empty-state">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <p>Cargando recibos...</p>
+        </div>
+
         <!-- VISTA DE LISTA (predeterminada) -->
-        <section class="documents-section" id="listView">
+        <section class="documents-section" id="listView" style="display: none;">
             @* <h2 class="section-title">Lista de Documentos</h2> *@
 
             <ul class="document-list">
@@ -156,7 +161,6 @@
         <!-- VISTA DE TARJETAS (oculta inicialmente) -->
         <section class="documents-section" id="cardView" style="display: none;">
             <h2 class="section-title">Documentos en Tarjetas</h2>
-
             <div class="document-cards">
                 <!-- Tarjeta 1 -->
                 @* <div class="document-card">

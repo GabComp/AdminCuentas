@@ -64,6 +64,8 @@ document.addEventListener('DOMContentLoaded', function () {
         cardView.style.display = 'none';
         listViewBtn.classList.add('active');
         cardViewBtn.classList.remove('active');
+        listViewBtn.setAttribute('aria-pressed', 'true');
+        cardViewBtn.setAttribute('aria-pressed', 'false');
     });
 
     cardViewBtn.addEventListener('click', function () {
@@ -71,29 +73,8 @@ document.addEventListener('DOMContentLoaded', function () {
         cardView.style.display = 'block';
         cardViewBtn.classList.add('active');
         listViewBtn.classList.remove('active');
-    });
-
-    // Funcionalidad para los botones de Ver y Descargar
-    document.querySelectorAll('.btn-view').forEach(button => {
-        button.addEventListener('click', function () {
-            // Aquí puedes agregar la lógica para ver el documento
-            const docName = this.closest('.document-item, .document-card')
-                .querySelector('h3').textContent;
-            alert(`Viendo documento: ${docName}`);
-            // En producción, redirigirías a la vista del documento
-            //ConsultaPDFModel.filtros[0].id_recibo = dataRecibos.id_recibo; 
-        });
-    });
-
-    document.querySelectorAll('.btn-download').forEach(button => {
-        button.addEventListener('click', function () {
-            ConsultaReciboPDF();
-            // Aquí puedes agregar la lógica para descargar
-            const docName = this.closest('.document-item, .document-card')
-                .querySelector('h3').textContent;
-            alert(`Descargando documento: ${docName}`);
-            // En producción, iniciarías la descarga del archivo
-        });
+        cardViewBtn.setAttribute('aria-pressed', 'true');
+        listViewBtn.setAttribute('aria-pressed', 'false');
     });
 });
 
@@ -183,7 +164,7 @@ function crearDocumentoItem(doc) {
                 <i class="far fa-file-pdf"></i>
             </div>
             <div class="document-details">
-                <h3 class="mb-1">${escaparHtml(doc.ciclo_facturado)}</h3>
+                <h2 class="document-title mb-1">${escaparHtml(doc.ciclo_facturado)}</h2>
                 <p class="mb-0 text-muted">Consumo: ${escaparHtml(doc.consumo)} • Periodo: ${escaparHtml(doc.periodo)} </p>
             </div>
         </div>
@@ -217,7 +198,7 @@ function crearDocumentoItemCard(doc) {
         
         <div class="card-content flex-grow-1">
             <!-- Se cambia <h3> a <h5> para reducir el tamaño del título -->
-            <h5 class="mb-1">${escaparHtml(doc.ciclo_facturado)}</h5>
+            <h2 class="document-title mb-1">${escaparHtml(doc.ciclo_facturado)}</h2>
             
             <!-- Se agrega la clase 'small' para que el texto descriptivo ocupe menos espacio -->
             <p class="mb-3 text-muted small">
@@ -242,6 +223,34 @@ function crearDocumentoItemCard(doc) {
     return div;
 }
 
+function mostrarEstadoRecibos(mensaje, icono, girando) {
+    const estado = document.getElementById('estadoRecibos');
+    if (!estado) return;
+
+    estado.classList.remove('d-none');
+    estado.innerHTML = `<i class="fas ${icono}${girando ? ' fa-spin' : ''}"></i><p>${escaparHtml(mensaje)}</p>`;
+}
+
+function actualizarVistasRecibos(mostrar) {
+    const listViewBtn = document.getElementById('listViewBtn');
+    const cardViewBtn = document.getElementById('cardViewBtn');
+    const listView = document.getElementById('listView');
+    const cardView = document.getElementById('cardView');
+
+    listViewBtn.disabled = !mostrar;
+    cardViewBtn.disabled = !mostrar;
+
+    if (!mostrar) {
+        listView.style.display = 'none';
+        cardView.style.display = 'none';
+        return;
+    }
+
+    const verLista = listViewBtn.classList.contains('active');
+    listView.style.display = verLista ? 'block' : 'none';
+    cardView.style.display = verLista ? 'none' : 'block';
+}
+
 function renderizarDocumentos(lista) {
     const contenedor = document.querySelector('.document-list');
     contenedor.innerHTML = '';
@@ -254,6 +263,19 @@ function renderizarDocumentos(lista) {
         const itemCard = crearDocumentoItemCard(doc);
         contenedorCard.appendChild(itemCard);
     });
+
+    const estado = document.getElementById('estadoRecibos');
+    const hayDocumentos = lista.length > 0;
+
+    actualizarVistasRecibos(hayDocumentos);
+
+    if (estado) {
+        if (hayDocumentos) {
+            estado.classList.add('d-none');
+        } else {
+            mostrarEstadoRecibos('No hay recibos disponibles para esta cuenta.', 'fa-file-circle-xmark', false);
+        }
+    }
 };
 
 function asignarEventos(elemento, doc) {
@@ -325,6 +347,8 @@ function ConsultaRecibos() {
                 dataRecibos = data.body.slice(0, 12);
                 renderizarDocumentos(dataRecibos);
             } else {
+                actualizarVistasRecibos(false);
+                mostrarEstadoRecibos('No fue posible consultar los recibos de esta cuenta.', 'fa-circle-exclamation', false);
                 Swal.fire({
                     title: "ERROR!!",
                     text: data.message || 'No fue posible consultar los recibos.',
@@ -336,6 +360,8 @@ function ConsultaRecibos() {
             const mensaje = xhr.responseJSON && xhr.responseJSON.message
                 ? xhr.responseJSON.message
                 : 'No fue posible consultar los recibos.';
+            actualizarVistasRecibos(false);
+            mostrarEstadoRecibos(mensaje, 'fa-circle-exclamation', false);
             Swal.fire({ title: "ERROR!!", text: mensaje, icon: "error" });
         }
     });
@@ -384,9 +410,12 @@ function ObtenerCuentasRecibosUsuario() {
         success: function (data) {
             if (data && data.length > 0) {
                 CargarCuentasSelect('#SelectCuentaRecibos', data);
+            } else {
+                mostrarEstadoRecibos('No tienes cuentas vinculadas. Agrega una en "Administrar Cuenta".', 'fa-link-slash', false);
             }
         },
         error: function () {
+            mostrarEstadoRecibos('No fue posible obtener tus cuentas. Intenta de nuevo.', 'fa-circle-exclamation', false);
             Swal.fire({ title: "ERROR!!", text: `OCURRIO UN ERROR AL OBTENER LAS CUENTAS!`, icon: "error" });
         }
     });

@@ -36,19 +36,96 @@ function LimpiarObjetoUsuario() {
     objUser.CODIGO = '';
 };
 
-$(document).ready(function () {
-    CargarDatosName();
-});
-
 function CargarDatosName() {
     $.get('/Login/CargarDatosUsuario', function (resp) {
 
         const nombre = resp?.usuario?.NOMBRE;
+        const $badge = $('#nombreUsuarioBadge');
 
         if (!nombre) {
-            $("#perfiLink").hide();
+            $badge.text('Mi Perfil');
             return;
         }
-        $("#perfiLink").show().text(nombre.toUpperCase());
+
+        $badge.text(nombre.toUpperCase());
     });
 };
+
+$(function () {
+    CargarDatosName();
+
+    const $navList = $('#navList');
+    const $mobileToggle = $('#mobileToggle');
+
+    function cerrarMenuMovil() {
+        $navList.removeClass('active');
+        $mobileToggle.removeClass('active').attr('aria-expanded', 'false');
+    }
+
+    $mobileToggle.on('click', function () {
+        const abierto = $navList.toggleClass('active').hasClass('active');
+        $(this).toggleClass('active', abierto).attr('aria-expanded', abierto ? 'true' : 'false');
+    });
+
+    // Submenú de perfil: hover en escritorio y clic/toque en cualquier tamaño.
+    $('.nav-item.has-dropdown > .nav-link').on('click', function (e) {
+        e.preventDefault();
+        const $item = $(this).parent();
+        const abierto = $item.toggleClass('open').hasClass('open');
+        $(this).attr('aria-expanded', abierto ? 'true' : 'false');
+    });
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.nav-item.has-dropdown').length) {
+            $('.nav-item.has-dropdown')
+                .removeClass('open')
+                .children('.nav-link')
+                .attr('aria-expanded', 'false');
+        }
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape') {
+            $('.nav-item.has-dropdown')
+                .removeClass('open')
+                .children('.nav-link')
+                .attr('aria-expanded', 'false');
+            cerrarMenuMovil();
+        }
+    });
+
+    $navList.find('a').on('click', function () {
+        if ($(this).closest('.nav-item.has-dropdown').length) {
+            return;
+        }
+        if ($(window).width() <= 992) {
+            cerrarMenuMovil();
+        }
+    });
+
+    $(window).on('resize', function () {
+        if ($(window).width() > 992) {
+            cerrarMenuMovil();
+        }
+    });
+
+    $(document).on('click', '.js-logout', function () {
+        $.post('/Login/CerrarSesion')
+            .always(function () {
+                window.location.href = '/Home/Index';
+            });
+    });
+
+    // Botón "Ir arriba".
+    const $btnSubir = $('#btnSubir');
+
+    if ($btnSubir.length) {
+        $(window).on('scroll', function () {
+            $btnSubir.toggleClass('mostrar', $(this).scrollTop() > 320);
+        });
+
+        $btnSubir.on('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+});

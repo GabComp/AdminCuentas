@@ -1,67 +1,57 @@
-﻿* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-    background-color: #f5f5f5;
-    min-height: 100vh;
-}
+﻿/* ==========================================================================
+   Recibos y Hoja de no adeudo
+   Estilos de componente. No se reinician etiquetas globales para no
+   interferir con el layout institucional ni con Bootstrap.
+   ========================================================================== */
 
 .header {
-/*    background-color: #AB0033;*/
-    color: black;
-    padding: 20px 0;
+    color: var(--color-gob-guinda, #691C32);
+    padding: 10px 0 20px;
     text-align: center;
-    margin-bottom: 40px;
-    /*box-shadow: 0 4px 12px rgba(171, 0, 51, 0.2);*/
+    margin-bottom: 28px;
 }
 
     .header h1 {
-        font-size: 2.5rem;
-        font-weight: 300;
-        margin-bottom: 10px;
+        font-size: clamp(1.7rem, 3vw, 2.4rem);
+        font-weight: 700;
+        margin-bottom: 8px;
     }
 
     .header p {
-        font-size: 1.1rem;
-        opacity: 0.9;
+        color: #5f6770;
+        font-size: 1rem;
+        margin-bottom: 0;
     }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
 .documents-section {
-    background-color: white;
+    background-color: #fff;
     border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     padding: 30px;
-    margin-bottom: 150px;
+    margin-bottom: 40px;
 }
 
 .section-title {
     color: #333;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     margin-bottom: 25px;
     padding-bottom: 15px;
     border-bottom: 2px solid #f0f0f0;
     font-weight: 600;
 }
 
-/* Estilo para lista de documentos */
+/* Lista de documentos */
 .document-list {
     list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
 .document-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
     padding: 18px 20px;
     border: 1px solid #eaeaea;
     border-radius: 8px;
@@ -70,19 +60,25 @@ body {
     background-color: #fdfdfd;
 }
 
+    .document-item:last-child {
+        margin-bottom: 0;
+    }
+
     .document-item:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-color: #BC955C;
+        border-color: var(--color-gob-dorado, #BC955C);
     }
 
 .document-info {
     display: flex;
     align-items: center;
     gap: 15px;
+    min-width: 0;
 }
 
 .document-icon {
+    flex: 0 0 auto;
     background-color: #f8f8f8;
     width: 50px;
     height: 50px;
@@ -90,13 +86,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #AB0033;
+    color: var(--color-gob-guinda, #691C32);
     font-size: 1.3rem;
 }
 
-.document-details h3 {
+.document-details .document-title {
     color: #333;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 600;
     margin-bottom: 5px;
 }
@@ -104,168 +100,141 @@ body {
 .document-details p {
     color: #666;
     font-size: 0.9rem;
+    margin-bottom: 0;
 }
 
 .document-actions {
     display: flex;
     gap: 10px;
+    flex: 0 0 auto;
 }
 
-/* Botones */
-.btn {
-    padding: 10px 20px;
+.documents-section .btn {
+    padding: 10px 18px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
+    transition: all 0.25s ease;
+    font-size: 0.9rem;
+    line-height: 1.2;
 }
 
 .btn-view {
-    background-color: #BC955C;
-    color: white;
+    background-color: var(--color-gob-dorado, #BC955C);
+    color: var(--color-gob-guinda-dark, #4D1222);
 }
 
-    .btn-view:hover {
+    .btn-view:hover,
+    .btn-view:focus-visible {
         background-color: #a8834a;
+        color: #fff;
         transform: translateY(-2px);
     }
 
 .btn-download {
-    background-color: #AB0033;
-    color: white;
+    background-color: var(--color-gob-guinda, #691C32);
+    color: #fff;
 }
 
-    .btn-download:hover {
-        background-color: #8a0029;
+    .btn-download:hover,
+    .btn-download:focus-visible {
+        background-color: var(--color-gob-guinda-dark, #4D1222);
         transform: translateY(-2px);
     }
 
-/* Versión con tarjetas (alternativa) */
+/* Vista de tarjetas */
 .document-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: flex-start;
 }
 
 .document-card {
-    background-color: white;
+    background: #fff;
     border: 1px solid #eaeaea;
     border-radius: 10px;
-    padding: 25px;
-    display: flex;
-    flex-direction: column;
+    padding: 20px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
 }
 
     .document-card:hover {
-        transform: translateY(-5px);
+        transform: translateY(-3px);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        border-color: #BC955C;
+        border-color: var(--color-gob-dorado, #BC955C);
     }
 
 .card-icon {
-    background-color: #f8f8f8;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #AB0033;
-    font-size: 1.5rem;
-    margin-bottom: 20px;
+    color: var(--color-gob-guinda, #691C32);
+    margin-bottom: 10px;
 }
 
-.card-content h3 {
+.card-content .document-title {
     color: #333;
-    font-size: 1.3rem;
-    margin-bottom: 10px;
     font-weight: 600;
 }
 
-.card-content p {
-    color: #666;
-    margin-bottom: 20px;
-    line-height: 1.5;
-}
-
 .card-actions {
-    margin-top: auto;
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
 }
 
-    .card-actions .btn {
-        flex: 1;
-        justify-content: center;
-    }
-
-/* Para alternar entre lista y tarjetas */
-.view-toggle {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
-    gap: 10px;
-}
-
+/* Botones de cambio de vista */
 .toggle-btn {
-    background-color: white;
-    border: 1px solid #ddd;
-    padding: 8px 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
-    color: #666;
+    justify-content: center;
+    background-color: #fff;
+    border: 1px solid #d7dce2;
+    border-radius: 8px;
+    color: var(--color-gob-guinda, #691C32);
+    transition: all 0.2s ease;
 }
+
+    .toggle-btn:hover {
+        border-color: var(--color-gob-dorado, #BC955C);
+        background-color: var(--color-gob-dorado-light, #F7F3EC);
+    }
 
     .toggle-btn.active {
-        background-color: #AB0033;
-        color: white;
-        border-color: #AB0033;
+        background-color: var(--color-gob-guinda, #691C32);
+        border-color: var(--color-gob-guinda, #691C32);
+        color: #fff;
     }
 
-/* Responsive */
+    .toggle-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
 @media (max-width: 768px) {
+    .header {
+        margin-bottom: 20px;
+    }
+
+    .documents-section {
+        padding: 18px;
+    }
 
     .document-item {
-        display: flex;
-        flex-direction: column; 
-        gap: 12px;
+        flex-direction: column;
+        align-items: stretch;
     }
-
-    .document-info {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .document-details h3 {
-        font-size: 1rem;
-        margin: 0;
-    }
-
-    .document-details p {
-        font-size: 0.85rem;
-        margin: 0;
-0    }
 
     .document-actions {
-        display: flex;
-        width: 100%;
-        gap: 10px;
+        justify-content: stretch;
     }
 
         .document-actions .btn {
-            flex: 1; /* 🔴 que se repartan el ancho */
-            justify-content: center;
-            font-size: 0.9rem;
-            padding: 10px;
+            flex: 1 1 0;
         }
 }

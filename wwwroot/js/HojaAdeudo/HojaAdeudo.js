@@ -36,7 +36,7 @@ function CargarCuentasSelect(idSelect, data) {
     select.append(
         $('<option>', {
             value: 0,
-            text: 'Selecciona un numero de cuenta',
+            text: 'Selecciona un número de cuenta',
             selected: true
         })
     );
@@ -71,6 +71,13 @@ function ObtenerCuentasHojaAdeudo() {
         success: function (data) {
             if (data && data.length > 0) {
                 CargarCuentasSelect('#SelectCuentaHojaAdeudo', data);
+            } else {
+                $('#SelectCuentaHojaAdeudo').prop('disabled', true);
+                Swal.fire({
+                    title: "Sin cuentas",
+                    text: "No tienes cuentas vinculadas. Agrega una en Administrar Cuenta.",
+                    icon: "info"
+                });
             }
         },
         error: function () {

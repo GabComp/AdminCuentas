@@ -22,44 +22,29 @@
     --border-color: #f1f3f5;
 }
 
-/* Modo Oscuro Nativo adaptado a alta legibilidad */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-body: #121212;
-        --bg-form-section: #1e1e1e;
-        --text-primary: var(--color-white);
-        --text-secondary: #a0a0a0;
-        --input-bg: #2a2a2a;
-        --input-border: #404040;
-        --input-text: var(--color-white);
-        --input-icon: #888888;
-        --border-color: #333333;
-    }
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    background-color: var(--bg-body);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    color: var(--text-primary);
-}
+/* Modo claro institucional para el formulario dentro del layout. */
 
 .login-layout {
     display: flex;
-    min-height: 100vh;
     width: 100%;
+    max-width: 1000px;
+    min-height: 560px;
+    margin: 1.5rem auto;
+    background-color: var(--bg-form-section);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(105, 28, 50, 0.14);
 }
 
 /* Área Visual */
 .login-visual {
-    flex: 1;
+    flex: 1 1 46%;
     background: linear-gradient(135deg, var(--color-gob-guinda) 0%, var(--color-gob-guinda-dark) 100%);
     color: var(--color-white);
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 4rem;
+    padding: 3rem 2.75rem;
     position: relative;
     overflow: hidden;
 }
@@ -113,12 +98,12 @@ body {
 
 /* Área de Formulario */
 .login-form-section {
-    flex: 1;
+    flex: 1 1 54%;
     display: flex;
     align-items: center;
     justify-content: center;
     background-color: var(--bg-form-section);
-    padding: 2rem;
+    padding: 2.5rem;
 }
 
 .form-wrapper {
@@ -160,6 +145,15 @@ body {
         padding: 12px 15px 12px 0;
         box-shadow: none;
     }
+
+    .modern-input-group .form-control::placeholder {
+        font-size: 0.85rem;
+    }
+
+.login-form-section .form-text {
+    color: var(--text-secondary) !important;
+    font-size: 0.8rem;
+}
 
     .modern-input-group .toggle-password {
         background-color: transparent;
@@ -234,11 +228,14 @@ input:-webkit-autofill {
 @media (max-width: 991px) {
     .login-layout {
         flex-direction: column;
+        min-height: 0;
+        margin: 0;
+        border-radius: 14px;
     }
 
     .login-visual {
         flex: none;
-        padding: 2.5rem 2rem;
+        padding: 2rem 1.5rem;
         text-align: center;
         align-items: center;
     }
@@ -263,7 +260,6 @@ input:-webkit-autofill {
         align-items: flex-start;
     }
 }
-62863
 @keyframes fadeIn {
     from {
         opacity: 0;

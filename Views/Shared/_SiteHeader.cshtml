@@ -1,0 +1,157 @@
+@using PrototipoComapa.Extensions
+@using PrototipoComapa.Models.UsuarioWeb
+@{
+    var usuarioSesion = Context.Session.GetObject<UsuarioWebModel.objReponse>("UsuarioSesion");
+    var autenticado = usuarioSesion is not null && !string.IsNullOrWhiteSpace(usuarioSesion.NOMBRE);
+
+    var controlador = ViewContext.RouteData.Values["controller"]?.ToString();
+    var accion = ViewContext.RouteData.Values["action"]?.ToString();
+    var enPagoEnLinea = Context.Request.Path.StartsWithSegments("/pago-en-linea");
+    var enPrivacidad = string.Equals(controlador, "Home", StringComparison.OrdinalIgnoreCase) &&
+                       string.Equals(accion, "Privacy", StringComparison.OrdinalIgnoreCase);
+
+    string ClaseActiva(string controladorEsperado, string accionEsperada)
+    {
+        return string.Equals(controlador, controladorEsperado, StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(accion, accionEsperada, StringComparison.OrdinalIgnoreCase)
+            ? " active"
+            : string.Empty;
+    }
+
+    var inicioUrl = autenticado
+        ? Url.Action("Menu", "Home")
+        : Url.Action("Index", "Home");
+    var claseInicio = autenticado
+        ? ClaseActiva("Home", "Menu")
+        : (string.Equals(controlador, "Home", StringComparison.OrdinalIgnoreCase) && !enPrivacidad ? " active" : string.Empty);
+}
+
+<!-- Barra Superior Institucional (Top Bar) -->
+<div class="top-bar">
+    <div class="container top-bar-content">
+        <div class="gob-tag">
+            <span>Ciudad Victoria | COMAPA Victoria</span>
+        </div>
+        <div class="top-bar-right">
+            <div class="top-contacts">
+                <a href="tel:8343187200" class="top-phone">
+                    <i class="fa-solid fa-phone"></i> Atención: (834) 318 7200
+                </a>
+            </div>
+            <div class="social-links-top">
+                <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://whatsapp.com" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Header y Navegación Principal -->
+<header class="header-comapa">
+    <nav class="main-navbar">
+        <div class="container nav-container">
+
+            <div class="brand-logo">
+                <a href="@inicioUrl" aria-label="COMAPA Victoria">
+                    <img src="~/img/logo-comapa.png" alt="Logo COMAPA Victoria" class="logo-img" />
+                </a>
+            </div>
+
+            <button type="button" class="mobile-toggle" id="mobileToggle"
+                    aria-label="Abrir menú" aria-controls="navList" aria-expanded="false">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <ul class="nav-list" id="navList">
+                <li class="nav-item">
+                    <a href="@inicioUrl" class="nav-link@(claseInicio)">
+                        <span class="nav-link-content">
+                            <i class="fa-solid fa-house-chimney"></i>
+                            Inicio
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/pago-en-linea" class="nav-link@(enPagoEnLinea ? " active" : string.Empty)">
+                        <span class="nav-link-content">
+                            <i class="fas fa-credit-card"></i>
+                            Pagar
+                        </span>
+                    </a>
+                </li>
+
+                @if (autenticado)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link@(ClaseActiva("Recibos", "Recibos"))" asp-controller="Recibos" asp-action="Recibos">
+                            <span class="nav-link-content">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                Consultar Recibos
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link@(ClaseActiva("HojaAdeudo", "HojaAdeudo"))" asp-controller="HojaAdeudo" asp-action="HojaAdeudo">
+                            <span class="nav-link-content">
+                                <i class="fas fa-file-circle-check"></i>
+                                Hoja de no Adeudo
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link@(ClaseActiva("AdministradorDeCuentas", "AdministradorDeCuentas"))" asp-controller="AdministradorDeCuentas" asp-action="AdministradorDeCuentas">
+                            <span class="nav-link-content">
+                                <i class="fa-solid fa-users-gear"></i>
+                                Administrar Cuenta
+                            </span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item has-dropdown">
+                        <a class="nav-link" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                            <span class="nav-link-content">
+                                <i class="fa-solid fa-circle-user"></i>
+                                <span id="nombreUsuarioBadge">@usuarioSesion!.NOMBRE.ToUpperInvariant()</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-down arrow"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="/Home/ActualizarDatos">
+                                    <i class="fa-solid fa-user-pen me-2 text-muted"></i> Actualizar Datos
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                            <li>
+                                <button type="button" class="dropdown-item text-danger fw-bold js-logout">
+                                    <i class="fa-solid fa-right-from-bracket me-2"></i> Cerrar Sesión
+                                </button>
+                            </li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link@(enPrivacidad ? " active" : string.Empty)" asp-controller="Home" asp-action="Privacy">
+                            <span class="nav-link-content">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                Aviso de privacidad
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item nav-btn-wrapper">
+                        <a class="btn-pago-main" asp-controller="Home" asp-action="Index">
+                            <i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar sesión
+                        </a>
+                    </li>
+                }
+            </ul>
+
+        </div>
+    </nav>
+</header>

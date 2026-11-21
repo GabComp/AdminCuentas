@@ -1,0 +1,39 @@
+<!-- Footer Institucional -->
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-top">
+            <div class="brand-col">
+                <img src="~/img/logo-comapa.png" alt="Logo COMAPA Victoria" class="footer-logo" />
+                <p>Comisión Municipal de Agua Potable y Alcantarillado de Victoria. Trabajando por el bienestar de las familias victorenses.</p>
+            </div>
+
+            <div class="footer-col">
+                <h2 class="footer-heading">Servicios</h2>
+                <ul>
+                    <li><a href="/pago-en-linea">Pago en línea</a></li>
+                    <li><a asp-controller="Recibos" asp-action="Recibos">Consultar recibos</a></li>
+                    <li><a asp-controller="AdministradorDeCuentas" asp-action="AdministradorDeCuentas">Administrar cuenta</a></li>
+                    <li><a asp-controller="Home" asp-action="Privacy">Aviso de privacidad</a></li>
+                </ul>
+            </div>
+
+            <div class="contact-col">
+                <h2 class="footer-heading">Contacto</h2>
+                <p><i class="fa-solid fa-location-dot me-2"></i> Zitácuaro #205, Col. Burócratas State, C.P. 87025, Ciudad Victoria, Tamaulipas.</p>
+                <p><i class="fa-solid fa-phone me-2"></i> (834) 318 7200</p>
+                <p><i class="fa-solid fa-clock me-2"></i> Lunes a viernes, 8:00 a 16:00 h.</p>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container footer-bottom-content">
+            <small>&copy; @DateTime.Now.Year - COMAPA Victoria. Todos los derechos reservados.</small>
+            <a asp-controller="Home" asp-action="Privacy">Aviso de privacidad</a>
+        </div>
+    </div>
+</footer>
+
+<!-- Botón para subir -->
+<button id="btnSubir" aria-label="Ir arriba">
+    <i class="fa-solid fa-arrow-up"></i>
+</button>

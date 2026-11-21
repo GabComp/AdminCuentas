@@ -153,3 +153,15 @@ $(function () {
         });
     }
 });
+
+// Sesión expirada en una llamada AJAX: volver al login con aviso.
+// La API del portal responde 401 con un JSON cuando la sesión ya no es válida.
+$(document).ajaxError(function (event, xhr) {
+    if (!xhr || xhr.status !== 401) {
+        return;
+    }
+
+    if (window.location.pathname.toLowerCase() !== '/home/index') {
+        window.location.href = '/Home/Index?sesion=expirada';
+    }
+});

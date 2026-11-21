@@ -20,6 +20,9 @@
     const $iconoPagar = $('#iconoPagar');
     const $textoPagar = $('#textoPagar');
 
+    const $divMisCuentas = $('#divMisCuentas');
+    const $selectMisCuentas = $('#selectMisCuentas');
+
     const pagoHabilitado = window.comapaPagoHabilitado === true;
     const pagoMensaje = window.comapaPagoMensaje
         || 'El pago en línea estará disponible próximamente.';
@@ -214,6 +217,57 @@
             .always(function () {
                 setCargando(false);
             });
+    }
+
+    function cargarCuentasVinculadas() {
+        // Solo para usuarios autenticados con cuentas vinculadas: se muestra un
+        // selector para consultar el adeudo de una cuenta ya agregada, sin teclearla.
+        $.get('/Login/CargarDatosUsuario')
+            .done(function (resp) {
+                const usuario = resp && resp.usuario;
+                if (!usuario) {
+                    return;
+                }
+
+                $.ajax({
+                    contentType: 'application/json; charset=utf-8',
+                    url: '/AdministradorDeCuentas/ConsultarCuentasUsuario',
+                    type: 'POST',
+                    data: JSON.stringify({ ID_USUARIO_WEB: 0 }),
+                    cache: false,
+                    complete: function () {
+                        $.get('/Recibos/ObtenerCuentasRecibosUsuario')
+                            .done(function (cuentas) {
+                                if (cuentas && cuentas.length > 0) {
+                                    poblarMisCuentas(cuentas);
+                                }
+                            });
+                    }
+                });
+            });
+    }
+
+    function poblarMisCuentas(cuentas) {
+        $selectMisCuentas.empty();
+        $selectMisCuentas.append($('<option>', { value: '', text: 'Selecciona una cuenta' }));
+
+        cuentas.forEach(function (c) {
+            $selectMisCuentas.append(
+                $('<option>', {
+                    value: c.CUENTA_COMAPA,
+                    text: c.CUENTA_COMAPA + ' - ' + (c.ALIAS_CUENTA || 'Cuenta')
+                })
+            );
+        });
+
+        $divMisCuentas.removeClass('d-none');
+
+        // Con una sola cuenta, se prepara el adeudo y el botón de pago automáticamente.
+        if (cuentas.length === 1) {
+            $selectMisCuentas.val(cuentas[0].CUENTA_COMAPA);
+            $cuenta.val(cuentas[0].CUENTA_COMAPA);
+            consultarAdeudo();
+        }
     }
 
     function limpiarAlmacenamientoEvo() {
@@ -436,4 +490,16 @@
     });
 
     $('#btnPagar').on('click', iniciarPago);
+
+    $selectMisCuentas.on('change', function () {
+        const valor = this.value;
+        if (!valor) {
+            return;
+        }
+
+        $cuenta.val(valor);
+        consultarAdeudo();
+    });
+
+    cargarCuentasVinculadas();
 });

@@ -35,6 +35,11 @@ namespace AdministradorDeCuentas.Controllers
             return View();
         }
 
+        public IActionResult Tramites()
+        {
+            return View();
+        }
+
         public IActionResult ReporteFuga()
         {
             return View();

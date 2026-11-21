@@ -32,6 +32,94 @@ namespace PrototipoComapa.Controllers.Servicios.TramitesDisponibles
             return View();
         }
 
+        public ActionResult HistorialPagos()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [EnableRateLimiting("recibos")]
+        public async Task<IActionResult> ConsultaHistorialPagos([FromBody] DatosValidacion? Jcontent)
+        {
+            var idCuenta = Jcontent?.filtros?.FirstOrDefault()?.id_cuenta;
+
+            if (idCuenta is null or <= 0)
+            {
+                return Json(new { ok = false, message = "Debe indicar una cuenta válida." });
+            }
+
+            if (!CuentaPerteneceAlUsuario(idCuenta.Value))
+            {
+                _logger.LogWarning(
+                    "El usuario intentó consultar el historial de pagos de una cuenta que no le pertenece ({Cuenta}).",
+                    idCuenta);
+
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    ok = false,
+                    message = "No tienes acceso a esa cuenta."
+                });
+            }
+
+            var cancellationToken = HttpContext.RequestAborted;
+
+            try
+            {
+                using var response = await EnviarAsync(
+                    "comercial/HistorialPagos",
+                    Jcontent!,
+                    cancellationToken);
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    _auth.InvalidarToken();
+                    _logger.LogWarning("La API rechazó el token al consultar el historial de pagos.");
+                    return ServicioNoDisponible();
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "HistorialPagos respondió {StatusCode} para la cuenta {Cuenta}.",
+                        (int)response.StatusCode,
+                        idCuenta);
+
+                    return Json(new { ok = false, message = "No fue posible consultar el historial de pagos." });
+                }
+
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                var lista = JsonSerializer.Deserialize<List<PagoHistorial>>(
+                    body,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return Json(new { ok = true, body = lista ?? new List<PagoHistorial>() });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Configuración incompleta al consultar el historial de pagos.");
+                return ServicioNoDisponible();
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Tiempo de espera agotado al consultar el historial de pagos de la cuenta {Cuenta}.", idCuenta);
+                return StatusCode(StatusCodes.Status504GatewayTimeout, new
+                {
+                    ok = false,
+                    message = "La consulta tardó demasiado. Intenta de nuevo."
+                });
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Error de comunicación al consultar el historial de pagos de la cuenta {Cuenta}.", idCuenta);
+                return ServicioNoDisponible();
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Respuesta inválida al consultar el historial de pagos de la cuenta {Cuenta}.", idCuenta);
+                return Json(new { ok = false, message = "El servicio devolvió una respuesta no válida." });
+            }
+        }
+
         [HttpPost]
         [EnableRateLimiting("recibos")]
         public async Task<IActionResult> ConsultaRecibos([FromBody] DatosValidacion? Jcontent)

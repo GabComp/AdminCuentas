@@ -216,13 +216,38 @@ img.on("mouseleave", function () {
 
 // La tabla se renderiza en LLenarTabla() sin dependencias externas.
 
-//$(document).on('click', '.btn-editarCuenta', function () {
+$(document).on('click', '.btn-editarCuenta', function () {
+    const cuenta = $(this).data('id');
+    const aliasActual = $(this).data('alias') || '';
 
-//    const idUsuario = $(this).data('id');
-//    const tabla = $(this).data('tabla');
+    Swal.fire({
+        title: 'Editar alias',
+        input: 'text',
+        inputValue: aliasActual,
+        inputPlaceholder: 'Ej. Casa',
+        inputAttributes: { maxlength: 40, 'aria-label': 'Alias de la cuenta' },
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#691C32',
+        inputValidator: (valor) => {
+            const texto = (valor || '').trim();
+            if (!texto) return 'Ingresa un alias.';
+            if (texto.length > 40) return 'El alias debe tener máximo 40 caracteres.';
+            return null;
+        }
+    }).then((result) => {
+        if (!result.isConfirmed) {
+            return;
+        }
 
-//    console.log({ idUsuario, tabla });
-//});
+        objActionsCuentaUsuario.ACCION = 'ACT';
+        objActionsCuentaUsuario.CUENTA_COMAPA = cuenta;
+        objActionsCuentaUsuario.ALIAS_CUENTA = (result.value || '').trim();
+
+        ActionsCuentaUsuario();
+    });
+});
 
 $(document).on('click', '.btn-eliminarCuenta', function () {
 
@@ -278,7 +303,7 @@ function LLenarTabla(data) {
     if (!data || data.length === 0) {
         const fila = document.createElement('tr');
         fila.innerHTML = `
-            <td colspan="3" class="text-center text-muted py-4">
+            <td colspan="4" class="text-center text-muted py-4">
                 No tienes cuentas vinculadas. Usa "Registrar Cuenta" para agregar una.
             </td>`;
         tbody.appendChild(fila);
@@ -290,6 +315,16 @@ function LLenarTabla(data) {
         fila.innerHTML = `
             <td>${escaparHtml(cuenta.CUENTA_COMAPA)}</td>
             <td>${escaparHtml(cuenta.ALIAS_CUENTA)}</td>
+            <td class="text-center">
+                <button type="button"
+                        class="btn-editarCuenta btn btn-outline-secondary btn-sm"
+                        data-id="${escaparHtml(cuenta.CUENTA_COMAPA)}"
+                        data-alias="${escaparHtml(cuenta.ALIAS_CUENTA)}"
+                        title="Editar alias de la cuenta ${escaparHtml(cuenta.CUENTA_COMAPA)}"
+                        aria-label="Editar alias de la cuenta ${escaparHtml(cuenta.CUENTA_COMAPA)}">
+                    <i class="fas fa-pen"></i>
+                </button>
+            </td>
             <td class="text-center">
                 <button type="button"
                         class="btn-eliminarCuenta btn btn-danger btn-sm"

@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "Historial de pagos";
+}
+
+@section Styles {
+    <style>
+        .pagos-header {
+            margin: 0 0 1.5rem;
+            padding: 1.5rem 2rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #691C32 0%, #4D1222 100%);
+            color: #fff;
+        }
+
+        .pagos-header h1 {
+            margin: 0 0 0.35rem;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 700;
+        }
+
+        .pagos-header p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .pago-card {
+            border: 0;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .pago-card thead th {
+            background-color: #691C32;
+            color: #fff;
+            font-weight: 600;
+            border: 0;
+            padding: 12px 16px;
+        }
+
+        .pago-card tbody td {
+            padding: 12px 16px;
+            vertical-align: middle;
+        }
+
+        .badge-pago {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .badge-pago.aplicado {
+            background-color: #e6f4ea;
+            color: #1e7e34;
+        }
+
+        .badge-pago.proceso {
+            background-color: #fdf3e0;
+            color: #a86b00;
+        }
+
+        .badge-pago.otro {
+            background-color: #eceff2;
+            color: #4a5568;
+        }
+    </style>
+}
+
+<header class="pagos-header">
+    <h1>Historial de pagos en línea</h1>
+    <p>Consulta los pagos realizados con tarjeta en tus cuentas vinculadas.</p>
+</header>
+
+<main>
+    <div class="row align-items-end gy-3 mb-3">
+        <div class="col-12 col-md-4">
+            <label for="SelectCuentaPagos" class="form-label">Selecciona una cuenta</label>
+            <select id="SelectCuentaPagos" class="form-select"></select>
+        </div>
+    </div>
+
+    <div id="estadoPagos" class="empty-state">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <p>Cargando...</p>
+    </div>
+
+    <div class="card pago-card d-none" id="tablaPagos">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Folio</th>
+                        <th>Importe</th>
+                        <th>Estatus</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyPagos"></tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="~/js/Recibos/HistorialPagos.js?v=@(DateTime.Now.Ticks)"></script>
+}

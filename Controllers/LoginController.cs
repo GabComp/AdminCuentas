@@ -20,7 +20,12 @@ namespace PrototipoComapa.Controllers
         private const int OtpTtlMinutos = 10;
         private const int OtpMaxIntentos = 5;
 
+        private const string PrefijoLoginBloqueo = "login-bloqueo:";
+        private const int LoginMaxIntentos = 5;
+        private const int LoginBloqueoMinutos = 15;
+
         private sealed record OtpRegistro(string Codigo, DateTime Expira, int Intentos);
+        private sealed record IntentosLogin(int Intentos, DateTime BloqueadoHasta);
 
         private readonly HttpClient _ApiClient;
         private readonly IConfiguration _configuration;
@@ -60,6 +65,17 @@ namespace PrototipoComapa.Controllers
 
             try
             {
+                var claveBloqueo = ObtenerClaveBloqueo(request.USUARIO);
+
+                if (EstaBloqueado(claveBloqueo))
+                {
+                    _logger.LogWarning(
+                        "Inicio de sesión bloqueado para {Usuario} desde {IP}.",
+                        request.USUARIO, ClienteIp());
+
+                    return ErrorGenerico("Demasiados intentos fallidos. Espera unos minutos e inténtalo de nuevo.");
+                }
+
                 var apiRequest = new ApiRequest
                 {
                     Application = "LoginServicios",
@@ -114,12 +130,12 @@ namespace PrototipoComapa.Controllers
                         "La API de login rechazó la solicitud: {Mensaje}.",
                         apiResponse.ResponseMessage);
 
-                    return ErrorGenerico("Usuario o contraseña incorrectos.");
+                    return CredencialesInvalidas(claveBloqueo);
                 }
 
                 if (apiResponse.TransactionResponses is null || apiResponse.TransactionResponses.Count == 0)
                 {
-                    return ErrorGenerico("Usuario o contraseña incorrectos.");
+                    return CredencialesInvalidas(claveBloqueo);
                 }
 
                 var transaction = apiResponse.TransactionResponses[0];
@@ -131,7 +147,7 @@ namespace PrototipoComapa.Controllers
                         "Inicio de sesión rechazado: {Mensaje}.",
                         transaction.TransactionMessage);
 
-                    return ErrorGenerico("Usuario o contraseña incorrectos.");
+                    return CredencialesInvalidas(claveBloqueo);
                 }
 
                 var usuarioSesion = transaction.TransactionResults?.FirstOrDefault();
@@ -144,6 +160,16 @@ namespace PrototipoComapa.Controllers
 
                 var idUsuario = usuarioSesion.mensaje ?? string.Empty;
 
+                // Credenciales inválidas detectadas en el backend (usuario o
+                // contraseña incorrectos). Se cuenta para el bloqueo temporal.
+                if (string.Equals(
+                        idUsuario,
+                        "USUARIO O CONTRASEÑA INVALIDOS",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return CredencialesInvalidas(claveBloqueo);
+                }
+
                 if (!int.TryParse(idUsuario, out var idUsuarioNumerico) || idUsuarioNumerico <= 0)
                 {
                     _logger.LogWarning("El login devolvió un ID_USUARIO no válido.");
@@ -154,6 +180,8 @@ namespace PrototipoComapa.Controllers
                 HttpContext.Session.Clear();
                 HttpContext.Session.SetString("UsuarioSesion", JsonSerializer.Serialize(usuarioSesion));
                 HttpContext.Session.SetString("ID_USUARIO", idUsuarioNumerico.ToString());
+
+                _cache.Remove(claveBloqueo);
 
                 return Json(new UsuarioWebRegistroResponse
                 {
@@ -598,6 +626,59 @@ namespace PrototipoComapa.Controllers
 
         private static string GenerarCodigoOtp() =>
             RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+
+        private string ObtenerClaveBloqueo(string usuario) =>
+            PrefijoLoginBloqueo + NormalizarLogin(usuario) + ":" + ClienteIp();
+
+        private static string NormalizarLogin(string usuario) =>
+            (usuario ?? string.Empty).Trim().ToUpperInvariant();
+
+        private string ClienteIp() =>
+            HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconocido";
+
+        private bool EstaBloqueado(string clave)
+        {
+            return _cache.TryGetValue<IntentosLogin>(clave, out var estado) &&
+                   estado is not null &&
+                   estado.BloqueadoHasta > DateTime.UtcNow;
+        }
+
+        private JsonResult CredencialesInvalidas(string clave)
+        {
+            var intentos = 1;
+
+            if (_cache.TryGetValue<IntentosLogin>(clave, out var estado) && estado is not null)
+            {
+                intentos = estado.Intentos + 1;
+            }
+
+            var bloqueadoAhora = false;
+            var bloqueadoHasta = DateTime.MinValue;
+
+            if (intentos >= LoginMaxIntentos)
+            {
+                bloqueadoHasta = DateTime.UtcNow.AddMinutes(LoginBloqueoMinutos);
+                intentos = 0;
+                bloqueadoAhora = true;
+            }
+
+            _cache.Set(
+                clave,
+                new IntentosLogin(intentos, bloqueadoHasta),
+                TimeSpan.FromMinutes(LoginBloqueoMinutos + 1));
+
+            if (bloqueadoAhora)
+            {
+                _logger.LogWarning(
+                    "Cuenta bloqueada temporalmente por intentos fallidos desde {IP}.",
+                    ClienteIp());
+
+                return ErrorGenerico(
+                    "Demasiados intentos fallidos. Tu cuenta quedó bloqueada temporalmente. Intenta de nuevo en unos minutos.");
+            }
+
+            return ErrorGenerico("Usuario o contraseña incorrectos.");
+        }
 
         [HttpGet]
         public  JsonResult CargarDatosUsuario()

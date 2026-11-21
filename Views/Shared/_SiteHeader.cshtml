@@ -24,6 +24,17 @@
     var claseInicio = autenticado
         ? ClaseActiva("Home", "Menu")
         : (string.Equals(accion, "Inicio", StringComparison.OrdinalIgnoreCase) ? " active" : string.Empty);
+
+    var esServicio =
+        string.Equals(controlador, "Recibos", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(controlador, "HojaAdeudo", StringComparison.OrdinalIgnoreCase) ||
+        (string.Equals(controlador, "Home", StringComparison.OrdinalIgnoreCase) &&
+         string.Equals(accion, "Tramites", StringComparison.OrdinalIgnoreCase));
+
+    var esPerfil =
+        string.Equals(controlador, "AdministradorDeCuentas", StringComparison.OrdinalIgnoreCase) ||
+        (string.Equals(controlador, "Home", StringComparison.OrdinalIgnoreCase) &&
+         string.Equals(accion, "ActualizarDatos", StringComparison.OrdinalIgnoreCase));
 }
 
 <!-- Barra Superior Institucional (Top Bar) -->
@@ -86,33 +97,35 @@
 
                 @if (autenticado)
                 {
-                    <li class="nav-item">
-                        <a class="nav-link@(ClaseActiva("Recibos", "Recibos"))" asp-controller="Recibos" asp-action="Recibos">
+                    <li class="nav-item has-dropdown">
+                        <a class="nav-link@(esServicio ? " active" : string.Empty)" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                             <span class="nav-link-content">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
-                                Consultar Recibos
+                                <i class="fa-solid fa-layer-group"></i>
+                                Servicios
                             </span>
+                            <i class="fa-solid fa-chevron-down arrow"></i>
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link@(ClaseActiva("HojaAdeudo", "HojaAdeudo"))" asp-controller="HojaAdeudo" asp-action="HojaAdeudo">
-                            <span class="nav-link-content">
-                                <i class="fas fa-file-circle-check"></i>
-                                Hoja de no Adeudo
-                            </span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link@(ClaseActiva("AdministradorDeCuentas", "AdministradorDeCuentas"))" asp-controller="AdministradorDeCuentas" asp-action="AdministradorDeCuentas">
-                            <span class="nav-link-content">
-                                <i class="fa-solid fa-users-gear"></i>
-                                Administrar Cuenta
-                            </span>
-                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a asp-controller="Recibos" asp-action="Recibos">
+                                    <i class="fa-solid fa-file-invoice-dollar me-2 text-muted"></i> Consultar recibos
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Recibos" asp-action="HistorialPagos">
+                                    <i class="fa-solid fa-clock-rotate-left me-2 text-muted"></i> Historial de pagos
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Home" asp-action="Tramites">
+                                    <i class="fas fa-file-circle-check me-2 text-muted"></i> Trámites y servicios
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     <li class="nav-item has-dropdown">
-                        <a class="nav-link" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link@(esPerfil ? " active" : string.Empty)" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                             <span class="nav-link-content">
                                 <i class="fa-solid fa-circle-user"></i>
                                 <span id="nombreUsuarioBadge">@usuarioSesion!.NOMBRE.ToUpperInvariant()</span>
@@ -120,6 +133,12 @@
                             <i class="fa-solid fa-chevron-down arrow"></i>
                         </a>
                         <ul class="dropdown-menu">
+                            <li>
+                                <a asp-controller="AdministradorDeCuentas" asp-action="AdministradorDeCuentas">
+                                    <i class="fa-solid fa-users-gear me-2 text-muted"></i> Administrar cuenta
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
                             <li>
                                 <a href="/Home/ActualizarDatos">
                                     <i class="fa-solid fa-user-pen me-2 text-muted"></i> Actualizar Datos

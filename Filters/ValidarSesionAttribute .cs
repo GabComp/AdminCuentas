@@ -7,10 +7,16 @@ namespace AdministradorDeCuentas.Filters
     /// Valida que exista una sesión de ciudadano autenticada.
     /// La sesión solo se crea en LoginController cuando el backend confirma
     /// el acceso; aquí se exige además que el identificador de usuario sea válido.
+    ///
+    /// Se ejecuta como filtro de autorización con prioridad (Order = -1000) para
+    /// que una sesión expirada responda 401 antes de que corra la validación
+    /// antiforgery (que de otro modo devolvería 400 con un token viejo).
     /// </summary>
-    public sealed class ValidarSesionAttribute : ActionFilterAttribute
+    public sealed class ValidarSesionAttribute : Attribute, IAsyncAuthorizationFilter, IOrderedFilter
     {
-        public override void OnActionExecuting(ActionExecutingContext context)
+        public int Order => -1000;
+
+        public Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             var usuarioJson = context.HttpContext.Session.GetString("UsuarioSesion");
             var idUsuario = context.HttpContext.Session.GetString("ID_USUARIO");
@@ -46,11 +52,9 @@ namespace AdministradorDeCuentas.Filters
                             { "action", "Index" }
                         });
                 }
-
-                return;
             }
 
-            base.OnActionExecuting(context);
+            return Task.CompletedTask;
         }
 
         private static bool EsSolicitudAjax(HttpRequest request)

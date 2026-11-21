@@ -1,5 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Iniciar sesión";
+    var sesionExpirada = string.Equals(
+        Context.Request.Query["sesion"],
+        "expirada",
+        StringComparison.OrdinalIgnoreCase);
 }
 
 @section Styles {
@@ -23,6 +27,14 @@
     <!-- Área de Autenticación -->
     <div class="login-form-section">
         <div class="form-wrapper">
+
+            @if (sesionExpirada)
+            {
+                <div class="alert alert-warning d-flex align-items-start gap-2" role="alert">
+                    <i class="fas fa-clock mt-1"></i>
+                    <div>Tu sesión expiró. Inicia sesión nuevamente para continuar.</div>
+                </div>
+            }
 
             <div class="form-header mb-4">
                 <h2>Iniciar sesión</h2>

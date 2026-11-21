@@ -318,7 +318,7 @@ namespace AdministradorDeCuentas.Controllers
 
             var accion = (request.ACCION ?? string.Empty).Trim().ToUpperInvariant();
 
-            if (accion is not ("ALTA" or "BAJA"))
+            if (accion is not ("ALTA" or "BAJA" or "ACT"))
             {
                 return Json(new ActionsCuentasResponse
                 {
@@ -413,18 +413,38 @@ namespace AdministradorDeCuentas.Controllers
                         });
                     }
                 }
-                else if (!CuentaPerteneceAlUsuario(request.CUENTA_COMAPA))
+                else
                 {
-                    _logger.LogWarning(
-                        "El usuario intentó dar de baja una cuenta que no le pertenece ({Cuenta}).",
-                        request.CUENTA_COMAPA);
-
-                    return StatusCode(StatusCodes.Status403Forbidden, new ActionsCuentasResponse
+                    if (!CuentaPerteneceAlUsuario(request.CUENTA_COMAPA))
                     {
-                        Exito = false,
-                        Mensaje = "No tienes acceso a esa cuenta.",
-                        Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
-                    });
+                        _logger.LogWarning(
+                            "El usuario intentó modificar una cuenta que no le pertenece ({Cuenta}).",
+                            request.CUENTA_COMAPA);
+
+                        return StatusCode(StatusCodes.Status403Forbidden, new ActionsCuentasResponse
+                        {
+                            Exito = false,
+                            Mensaje = "No tienes acceso a esa cuenta.",
+                            Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                        });
+                    }
+
+                    if (accion == "ACT")
+                    {
+                        var alias = (request.ALIAS_CUENTA ?? string.Empty).Trim();
+
+                        if (string.IsNullOrWhiteSpace(alias) || alias.Length > 40)
+                        {
+                            return Json(new ActionsCuentasResponse
+                            {
+                                Exito = false,
+                                Mensaje = "El alias debe tener entre 1 y 40 caracteres.",
+                                Datos = new List<ACTIONS_USUARIO_WEB_CUENTAResult>()
+                            });
+                        }
+
+                        request.ALIAS_CUENTA = alias;
+                    }
                 }
 
                 request.ID_USUARIO_WEB = idUsuarioWeb;
@@ -521,6 +541,29 @@ namespace AdministradorDeCuentas.Controllers
                     });
                 }
 
+                var resultadosAccion = transaction.TransactionResults
+                    ?? new List<ACTIONS_USUARIO_WEB_CUENTAResult>();
+
+                // El SP devuelve MSG='OK' o un motivo (p. ej. "cuenta ya registrada").
+                // Si no es 'OK', la operación no se aplicó y se informa al usuario.
+                var mensajeAccion = resultadosAccion.FirstOrDefault()?.MSG;
+
+                if (!string.IsNullOrWhiteSpace(mensajeAccion) &&
+                    !string.Equals(mensajeAccion, "OK", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning(
+                        "La acción {Accion} no se completó: {Mensaje}.",
+                        accion,
+                        mensajeAccion);
+
+                    return Json(new ActionsCuentasResponse
+                    {
+                        Exito = false,
+                        Mensaje = mensajeAccion,
+                        Datos = resultadosAccion
+                    });
+                }
+
                 if (accion == "ALTA")
                 {
                     var usuarioSesion = HttpContext.Session.GetObject<objReponse>("UsuarioSesion");
@@ -540,7 +583,7 @@ namespace AdministradorDeCuentas.Controllers
                 return Json(new ActionsCuentasResponse
                 {
                     Exito = true,
-                    Datos = transaction.TransactionResults ?? new List<ACTIONS_USUARIO_WEB_CUENTAResult>(),
+                    Datos = resultadosAccion,
                     Mensaje = "Operación exitosa"
                 });
             }

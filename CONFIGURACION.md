@@ -123,13 +123,37 @@ usuario, debe actualizar sus credenciales.
 El login/registro ciudadano ahora usa `ComapaInternet.Api` a través de
 `API/Transaction`; ya no depende de `AppiPipasPruebas`.
 
-### Estado del PDF de recibos
+### Generación del PDF de recibos
 
-El historial de recibos funciona. La generación del PDF está bloqueada por el
-servicio externo `reportes.comapavictoria.org`: responde `500` con
-`TypeInitializationException` de `CrystalDecisions.CrystalReports.Engine.ReportDocument`.
-La API ahora devuelve `502` y el portal muestra un error controlado. Hay que
-revisar el runtime de Crystal Reports en el servidor de reportes.
+El PDF se genera dentro de `ComapaInternet.Api`; ya no depende del servicio
+externo de Crystal Reports.
+
+- Librerías: `PDFsharp 6.1.1` (MIT), `SkiaSharp` (MIT) y `ZXing.Net` (Apache 2.0).
+- Datos: `Internet.usp_BuscarRecibo` y después
+  `Facturacion.usp_PrintRecibosV2` (recibo actual) o
+  `Facturacion.usp_PrintRecibosFacturas` (histórico), con los mismos filtros
+  que usaba Crystal.
+- El PDF se arma en memoria y se transmite al portal: **no se guarda en disco,
+  base de datos, blob ni caché**.
+- `Reportes:Generador` en `appsettings.json`:
+  - `local` (predeterminado): generador nuevo.
+  - `crystal`: vuelve temporalmente al motor anterior (`ServicioReportes`).
+- Códigos de barras Code128 para el pago y leyenda con la referencia; gráfica de
+  consumo de los últimos 6 meses contra el año anterior.
+- El recibo incluye: datos del titular/comercio (RFC, clase, ruta,
+  localización, giro), datos del consumo (servicio, tarifa, medidor, lecturas,
+  fechas, incumplimiento), estado de cuenta con subtotal/IVA/adeudo, resumen de
+  documentos, historial de consumo y bloque de pago con cuenta y mes facturado.
+  Se omiten los anuncios externos que trae la versión impresa oficial.
+- El contrato `POST comercial/ObtnRecibo` no cambia.
+
+Fuentes: en Windows se usa Arial del sistema. En Linux/contenedores instale
+`fonts-liberation` (o configure `Reportes:FuenteRegular` y
+`Reportes:FuenteNegrita` con rutas a archivos TTF). Si desea que no dependa del
+sistema operativo, copie los TTF en `Resources/fonts` del proyecto.
+
+El servicio es sin estado: puede escalarse horizontalmente sin coordinación
+entre instancias.
 
 ## Tarjetas de prueba EVO (México)
 

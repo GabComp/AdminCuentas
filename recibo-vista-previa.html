@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Vista previa de recibos</title>
+    <style>
+        :root { color-scheme: light; }
+        body {
+            margin: 0;
+            padding: 24px;
+            background: #eef1f4;
+            font-family: "Segoe UI", system-ui, sans-serif;
+            color: #222;
+        }
+        h1 { font-size: 20px; margin: 0 0 4px; }
+        p.nota { margin: 0 0 20px; color: #555; font-size: 14px; }
+        .recibo {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 0 auto 24px;
+            max-width: 900px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+        }
+        .recibo h2 { font-size: 15px; margin: 0 0 12px; color: #691c32; }
+        .recibo img { display: block; width: 100%; height: auto; border: 1px solid #ddd; }
+        .acciones { max-width: 900px; margin: 0 auto 16px; font-size: 14px; }
+        .acciones a { color: #691c32; margin-right: 16px; }
+        .aviso { max-width: 900px; margin: 0 auto 16px; font-size: 13px; color: #7a4b00; background: #fff5e0; border: 1px solid #f0d9a8; border-radius: 8px; padding: 10px 14px; }
+    </style>
+</head>
+<body>
+    <h1>Recibos generados en una sola hoja</h1>
+    <p class="nota">Vista previa del ajuste del bloque de pago y de los ejemplos con 28 y 30 conceptos.</p>
+
+    <div class="acciones">
+        <a href="recibo-ejemplo-30-conceptos.pdf" target="_blank">Abrir PDF de 30 conceptos</a>
+        <a href="recibo-ejemplo-28-conceptos.pdf" target="_blank">Abrir PDF de 28 conceptos</a>
+        <a href="recibo-real-conceptos.pdf" target="_blank">Abrir recibo real con rezagos</a>
+    </div>
+
+    <div class="recibo">
+        <h2>Bloque de pago ajustado</h2>
+        <img src="pago-ajustado.png" alt="Bloque de código de barras y pie del recibo" />
+    </div>
+
+    <div class="recibo">
+        <h2>Ejemplo con 30 conceptos · una página</h2>
+        <img src="recibo-30-conceptos-pagina1.png" alt="Recibo con 30 conceptos en una página" />
+    </div>
+
+    <div class="recibo">
+        <h2>Ejemplo con 28 conceptos · una página</h2>
+        <img src="recibo-28-conceptos-pagina1.png" alt="Recibo con 28 conceptos en una página" />
+    </div>
+
+    <div class="recibo">
+        <h2>Recibo real · 9 conceptos distintos (con rezagos)</h2>
+        <img src="recibo-real-conceptos.png" alt="Conceptos reales de adeudo del recibo" />
+    </div>
+</body>
+</html>

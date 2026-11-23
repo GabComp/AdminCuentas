@@ -178,18 +178,24 @@ namespace AdministradorDeCuentas.Controllers
                 ? adeudo.IdOrdenCompra
                 : $"WEB{DateTime.UtcNow:yyyyMMddHHmmss}{Random.Shared.Next(1000, 9999)}";
 
-            // Si no se configuraron URLs absolutas, se derivan del host actual
-            // (incluye el dominio del App Service o el dominio propio del portal).
+            // Si no se configuraron URLs absolutas, se usa la URL pública del portal
+            // y, como último recurso, el host de la petición.
+            var basePublica = _configuration["Portal:PublicBaseUrl"]?.TrimEnd('/');
+
             var returnUrl = _configuration["Evo:ReturnUrl"]?.Trim();
             if (string.IsNullOrWhiteSpace(returnUrl))
             {
-                returnUrl = $"{Request.Scheme}://{Request.Host}/pago-en-linea/retorno";
+                returnUrl = !string.IsNullOrWhiteSpace(basePublica)
+                    ? $"{basePublica}/pago-en-linea/retorno"
+                    : $"{Request.Scheme}://{Request.Host}/pago-en-linea/retorno";
             }
 
             var cancelUrl = _configuration["Evo:CancelUrl"]?.Trim();
             if (string.IsNullOrWhiteSpace(cancelUrl))
             {
-                cancelUrl = $"{Request.Scheme}://{Request.Host}/pago-en-linea";
+                cancelUrl = !string.IsNullOrWhiteSpace(basePublica)
+                    ? $"{basePublica}/pago-en-linea"
+                    : $"{Request.Scheme}://{Request.Host}/pago-en-linea";
             }
 
             try

@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using System.Security.Cryptography;
+using System.Net;
 using AdministradorDeCuentas.Services;
 using PrototipoComapa.Utilerias;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -39,10 +41,41 @@ foreach (var clave in new[]
              "ApiSettings:Recibos",
              "ApiSettings:RecibosApiKey",
              "ApiSettings:RecibosLoginUser",
-             "ApiSettings:RecibosLoginPassword"
+             "ApiSettings:RecibosLoginPassword",
+             "Portal:PublicBaseUrl"
          })
 {
     Requerir(builder.Configuration, clave, esDesarrollo);
+}
+
+var allowedHosts = builder.Configuration["AllowedHosts"];
+
+if (!esDesarrollo &&
+    (string.IsNullOrWhiteSpace(allowedHosts) ||
+     allowedHosts.Contains('*', StringComparison.Ordinal)))
+{
+    throw new InvalidOperationException(
+        "Configure 'AllowedHosts' con los dominios reales del portal. " +
+        "El comodín '*' no está permitido en producción.");
+}
+
+var publicBaseUrl = builder.Configuration["Portal:PublicBaseUrl"]?.Trim();
+
+if (!string.IsNullOrWhiteSpace(publicBaseUrl))
+{
+    if (!Uri.TryCreate(publicBaseUrl, UriKind.Absolute, out var publicUri) ||
+        publicUri.Scheme != Uri.UriSchemeHttps)
+    {
+        throw new InvalidOperationException(
+            "'Portal:PublicBaseUrl' debe ser una URL absoluta https.");
+    }
+
+    publicBaseUrl = publicBaseUrl.TrimEnd('/');
+}
+else if (!esDesarrollo)
+{
+    throw new InvalidOperationException(
+        "Falta 'Portal:PublicBaseUrl'. Configúrela con la URL pública https del portal.");
 }
 
 var apiGeneralBaseUrl = builder.Configuration["ApiSettings:BaseUrl"]?.Trim()
@@ -99,7 +132,7 @@ builder.Services.AddHttpClient("ApiGeneralClient", (sp, client) =>
     {
         client.DefaultRequestHeaders.TryAddWithoutValidation("X-API-KEY", apiKey);
     }
-});
+}).AddHttpMessageHandler<ApiTokenHandler>();
 
 // Cliente único para ComapaInternet.Api (recibos y pagos).
 builder.Services.AddHttpClient("RecibosClient", (sp, client) =>
@@ -114,7 +147,7 @@ builder.Services.AddHttpClient("RecibosClient", (sp, client) =>
     {
         client.DefaultRequestHeaders.TryAddWithoutValidation("X-API-KEY", apiKey);
     }
-});
+}).AddHttpMessageHandler<ApiTokenHandler>();
 
 // Cliente para la pasarela EVO Payments.
 builder.Services.AddHttpClient("EvoClient", client =>
@@ -126,6 +159,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<RecibosApiService>();
 builder.Services.AddScoped<EvoPaymentService>();
 builder.Services.AddSingleton<RecibosAuthService>();
+builder.Services.AddTransient<ApiTokenHandler>();
 builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddSession(options =>
@@ -143,19 +177,57 @@ builder.Services.AddSession(options =>
 });
 
 // En Azure App Service / reverse proxy la IP real llega en X-Forwarded-For.
-// Se activa por defecto fuera de desarrollo. Si el portal se expone directamente
-// a Internet, desactive 'ForwardedHeaders:Enabled' para no permitir spoofing.
+// Se activa por defecto fuera de desarrollo. En producción se exige configurar
+// los proxies/redes de confianza para no aceptar cabeceras falsificadas.
 var usarForwardedHeaders = builder.Configuration.GetValue(
     "ForwardedHeaders:Enabled",
     !esDesarrollo);
 
 if (usarForwardedHeaders)
 {
+    var proxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>()
+                  ?? Array.Empty<string>();
+    var redes = builder.Configuration.GetSection("ForwardedHeaders:KnownNetworks").Get<string[]>()
+                ?? Array.Empty<string>();
+
+    if (!esDesarrollo && proxies.Length == 0 && redes.Length == 0)
+    {
+        throw new InvalidOperationException(
+            "Configure 'ForwardedHeaders:KnownProxies' o 'ForwardedHeaders:KnownNetworks' " +
+            "con los valores reales del proxy. No se permite confiar en X-Forwarded-For " +
+            "de cualquier origen en producción.");
+    }
+
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        options.KnownIPNetworks.Clear();
-        options.KnownProxies.Clear();
+        options.ForwardLimit = 1;
+
+        foreach (var proxy in proxies)
+        {
+            if (IPAddress.TryParse(proxy.Trim(), out var ip))
+            {
+                options.KnownProxies.Add(ip);
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"La IP configurada en 'ForwardedHeaders:KnownProxies' no es válida: {proxy}.");
+            }
+        }
+
+        foreach (var red in redes)
+        {
+            if (System.Net.IPNetwork.TryParse(red.Trim(), out var ipNetwork))
+            {
+                options.KnownIPNetworks.Add(ipNetwork);
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"La red configurada en 'ForwardedHeaders:KnownNetworks' no es válida: {red}.");
+            }
+        }
     });
 }
 
@@ -211,8 +283,6 @@ builder.Services.AddHsts(options =>
     options.IncludeSubDomains = true;
 });
 
-var cspPortal = ConstruirCsp(builder.Configuration, !esDesarrollo);
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -231,11 +301,15 @@ app.UseHttpsRedirection();
 
 app.Use(async (context, next) =>
 {
+    var nonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
+    context.Items["csp-nonce"] = nonce;
+
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["X-Frame-Options"] = "DENY";
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
     context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
-    context.Response.Headers["Content-Security-Policy"] = cspPortal;
+    context.Response.Headers["Content-Security-Policy"] =
+        ConstruirCsp(builder.Configuration, !esDesarrollo, nonce);
 
     await next();
 });
@@ -259,7 +333,7 @@ app.Run();
 static string ClientKey(HttpContext context) =>
     context.Connection.RemoteIpAddress?.ToString() ?? "desconocido";
 
-static string ConstruirCsp(IConfiguration configuration, bool produccion)
+static string ConstruirCsp(IConfiguration configuration, bool produccion, string nonce)
 {
     static IEnumerable<string> Leer(IConfiguration configuration, string clave) =>
         configuration.GetSection(clave).Get<string[]>() ?? Array.Empty<string>();
@@ -267,7 +341,7 @@ static string ConstruirCsp(IConfiguration configuration, bool produccion)
     var scripts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "'self'",
-        "'unsafe-inline'",
+        $"'nonce-{nonce}'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
         "https://*.evopayments.com",

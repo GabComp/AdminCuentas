@@ -1,4 +1,4 @@
-﻿@page "/pago-en-linea"
+@page "/pago-en-linea"
 @model AdministradorDeCuentas.Pages.PagoReciboModel
 @using Microsoft.Extensions.Configuration
 @using System.Text.Json
@@ -267,7 +267,7 @@
 </div>
 
 @section Scripts {
-    <script>
+    <script nonce="@(ViewContext.HttpContext.Items["csp-nonce"])">
         window.comapaPagoHabilitado = @(pagoHabilitado ? "true" : "false");
         window.comapaPagoMensaje = @Html.Raw(JsonSerializer.Serialize(pagoMensaje));
     </script>

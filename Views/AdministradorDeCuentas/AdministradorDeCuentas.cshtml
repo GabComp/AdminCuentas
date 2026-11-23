@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Administrar Cuenta";
 }
 
@@ -83,7 +83,7 @@
                         <label for="txtNumeroServicio" class="form-label">Cuenta</label>
                         <input type="text" class="form-control" id="txtNumeroServicio" name="NumeroServicio"
                                inputmode="numeric"
-                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               data-solo-enteros
                                placeholder="Ej. 000026" required maxlength="6" />
                     </div>
 
@@ -99,7 +99,7 @@
                         <label for="txtTotalPagar" class="form-label">Total a Pagar (del recibo más reciente)</label>
                         <input type="text" class="form-control" id="txtTotalPagar" name="TotalPagar"
                                inputmode="decimal"
-                               oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
+                               data-solo-decimales
                                placeholder="Ej. 1500.00" required />
                     </div>
 

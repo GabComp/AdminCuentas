@@ -155,6 +155,34 @@ sistema operativo, copie los TTF en `Resources/fonts` del proyecto.
 El servicio es sin estado: puede escalarse horizontalmente sin coordinación
 entre instancias.
 
+## Seguridad y despliegue
+
+- Los endpoints sensibles de la API (`/API/Transaction`, `/api/pagos/*`,
+  `/api/reportes/*`, `/api/comercial/*`) exigen **JWT de servicio + API Key**.
+  El portal adjunta el token automáticamente con `ApiTokenHandler`.
+- Los secretos (cadena de conexión, API Key, llave JWT, credenciales SMTP/EVO)
+  se configuran por variables de entorno o Key Vault. No se versionan:
+  `appsettings.Production.json` está en `.gitignore`.
+- En producción el portal exige:
+  - `AllowedHosts` con dominios reales (no `*`).
+  - `Portal:PublicBaseUrl` absoluta `https`.
+  - `ForwardedHeaders:KnownProxies` o `KnownNetworks` si está detrás de un
+    proxy/balanceador. Sin estos valores el arranque falla para evitar
+    falsificación de `X-Forwarded-For`.
+- La API también exige `AllowedHosts` reales en producción.
+- Rotar la API Key, la llave JWT y las contraseñas de BD si el archivo
+  `appsettings.Production.json` se compartió o copió fuera del servidor.
+- `/health` de la API responde un resumen mínimo y cachea el resultado 30 s.
+  El detalle completo solo se muestra enviando `X-HEALTH-KEY` con
+  `Health:DetalleKey`.
+- La CSP usa nonces para scripts inline; no se permite `'unsafe-inline'` en
+  `script-src`.
+- El restablecimiento de contraseña responde siempre de forma genérica para no
+  revelar si el correo existe.
+
+Pendiente recomendado: rotar el identificador de sesión al iniciar sesión y
+migrar el restablecimiento a un token de un solo uso con expiración forzada.
+
 ## Tarjetas de prueba EVO (México)
 
 Documentación: `https://evopaymentsmexico.gateway.mastercard.com/api/documentation/integrationGuidelines/supportedFeatures/testAndGoLive.html`

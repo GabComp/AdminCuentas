@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Iniciar sesión";
     var sesionExpirada = string.Equals(
         Context.Request.Query["sesion"],
@@ -86,7 +86,7 @@
 </section>
 
 @section Scripts {
-    <script>
+    <script nonce="@(Context.Items["csp-nonce"])">
         document.addEventListener("DOMContentLoaded", function () {
             const togglePasswordBtn = document.querySelector('.toggle-password');
             const passwordInput = document.getElementById('TxtPass');

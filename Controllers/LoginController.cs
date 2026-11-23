@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
@@ -205,11 +205,11 @@ namespace PrototipoComapa.Controllers
                 Url = ""
             });
 
-        private static JsonResult RestablecimientoFallido() =>
+        private static JsonResult RestablecimientoGenerico() =>
             new(new
             {
-                exito = false,
-                mensaje = "No fue posible restablecer la contraseña. Intenta de nuevo."
+                exito = true,
+                mensaje = "Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña."
             });
 
         // Este método atiende registro (ALTA) y actualización/baja de usuarios.
@@ -537,7 +537,7 @@ namespace PrototipoComapa.Controllers
                             "La API de restablecimiento respondió {StatusCode}.",
                             (int)response.StatusCode);
 
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
 
                     var apiResponse = JsonSerializer.Deserialize<ApiResponse>(responseContent);
@@ -545,7 +545,7 @@ namespace PrototipoComapa.Controllers
                     if (apiResponse is null)
                     {
                         _logger.LogWarning("La API de restablecimiento devolvió una respuesta vacía o inválida.");
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
 
                     if (apiResponse.ResponseCode != 1)
@@ -554,13 +554,13 @@ namespace PrototipoComapa.Controllers
                             "La API de restablecimiento rechazó la solicitud: {Mensaje}.",
                             apiResponse.ResponseMessage);
 
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
 
                     if (apiResponse.TransactionResponses is null ||
                         apiResponse.TransactionResponses.Count == 0)
                     {
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
 
                     var transaction = apiResponse.TransactionResponses[0];
@@ -571,7 +571,7 @@ namespace PrototipoComapa.Controllers
                             "El restablecimiento falló: {Mensaje}.",
                             transaction.TransactionMessage);
 
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
 
                     var datos = transaction.TransactionResults ?? new List<objReponse>();
@@ -579,7 +579,7 @@ namespace PrototipoComapa.Controllers
                     if (datos.Count == 0)
                     {
                         _logger.LogWarning("El restablecimiento no devolvió datos de usuario.");
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
 
                     user.USUARIO = (datos[0].mensaje2 ?? string.Empty).ToUpperInvariant();
@@ -590,19 +590,18 @@ namespace PrototipoComapa.Controllers
                             "El restablecimiento devolvió un estado no exitoso: {Estado}.",
                             datos[0].mensaje);
 
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
                     if (string.IsNullOrWhiteSpace(user.CONTRASENIA))
                     {
                         _logger.LogWarning("No se generó la contraseña temporal.");
-                        return RestablecimientoFallido();
+                        return RestablecimientoGenerico();
                     }
 
-                    var urlCambio = Url.Action(
-                        "CambioContrasenia",
-                        "Home",
-                        null,
-                        Request.Scheme);
+                    var basePublica = _configuration["Portal:PublicBaseUrl"]?.TrimEnd('/');
+                    var urlCambio = string.IsNullOrWhiteSpace(basePublica)
+                        ? Url.Action("CambioContrasenia", "Home", null, Request.Scheme)
+                        : $"{basePublica}/Home/CambioContrasenia";
 
                     var envio = await _emailService.SendEmailAsync(
                         correoDestino: user.CORREO_ELECTRONICO.Trim(),
@@ -612,12 +611,19 @@ namespace PrototipoComapa.Controllers
                             user.CONTRASENIA,
                             urlCambio ?? string.Empty));
 
-                    return Json(new { exito = envio.Exito, mensaje = envio.Mensaje });
+                    if (!envio.Exito)
+                    {
+                        _logger.LogWarning(
+                            "No se pudo enviar el correo de restablecimiento: {Mensaje}.",
+                            envio.Mensaje);
+                    }
+
+                    return RestablecimientoGenerico();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error inesperado al restablecer la contraseña.");
-                return RestablecimientoFallido();
+                return RestablecimientoGenerico();
             }
         }
         
@@ -691,6 +697,7 @@ namespace PrototipoComapa.Controllers
         public IActionResult CerrarSesion()
         {
             HttpContext.Session.Clear();
+            HttpContext.Response.Cookies.Delete(".Comapa.Session");
             return Json(new { ok = true });
         }
     }

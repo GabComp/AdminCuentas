@@ -4,3 +4,8 @@ obj/
 *.user
 *.suo
 *.cache
+
+# Configuración con secretos (no versionar)
+appsettings.Production.json
+appsettings.*.local.json
+secrets.json

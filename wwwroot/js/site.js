@@ -12,6 +12,19 @@
     }
 })();
 
+// Filtros de captura sin manejadores inline (compatibles con CSP por nonce).
+$(document).on('input', '[data-solo-enteros]', function () {
+    this.value = this.value.replace(/[^0-9]/g, '');
+});
+
+$(document).on('input', '[data-solo-decimales]', function () {
+    this.value = this.value.replace(/[^0-9.]/g, '');
+});
+
+$(document).on('click', '.js-imprimir', function () {
+    window.print();
+});
+
 let Usuario_ID = 0
 
 let objUser = {

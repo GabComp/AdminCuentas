@@ -1,0 +1,137 @@
+@page "/pago-en-linea/constancia"
+@using System.Globalization
+@model AdministradorDeCuentas.Pages.PagoConstanciaModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Pagar constancia";
+    ViewData["Description"] = "Pago en línea de la constancia de no adeudo de COMAPA Victoria.";
+}
+
+<section class="page-header text-center">
+    <div class="container">
+        <div class="breadcrumb">
+            <a asp-page="/pago-en-linea">Pago en línea</a> / <span>Constancia</span>
+        </div>
+        <h1>Pagar constancia de no adeudo</h1>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="container" style="max-width: 760px;">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                @if (Model.Pago is null)
+                {
+                    <div class="alert alert-danger mb-0" role="alert">
+                        @Model.MensajeError
+                    </div>
+                }
+                else
+                {
+                    <h2 class="h4 mb-3" style="color: var(--color-gob-guinda);">Constancia de no adeudo</h2>
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Folio</dt>
+                        <dd class="col-sm-8"><strong>@Model.Pago.Folio</strong></dd>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Pago.FolioPago))
+                        {
+                            <dt class="col-sm-4">Folio de pago</dt>
+                            <dd class="col-sm-8">@Model.Pago.FolioPago</dd>
+                        }
+
+                        <dt class="col-sm-4">Cuenta</dt>
+                        <dd class="col-sm-8">@Model.Pago.IdCuenta</dd>
+
+                        <dt class="col-sm-4">Titular</dt>
+                        <dd class="col-sm-8">@Model.Pago.Nombre</dd>
+
+                        <dt class="col-sm-4">Subtotal</dt>
+                        <dd class="col-sm-8">@Model.Pago.Subtotal.ToString("C", new CultureInfo("es-MX"))</dd>
+
+                        <dt class="col-sm-4">I.V.A.</dt>
+                        <dd class="col-sm-8">@Model.Pago.Iva.ToString("C", new CultureInfo("es-MX"))</dd>
+
+                        <dt class="col-sm-4">Total a pagar</dt>
+                        <dd class="col-sm-8 fw-bold text-success">
+                            @Model.Pago.Total.ToString("C", new CultureInfo("es-MX"))
+                        </dd>
+                    </dl>
+
+                    @if (!Model.Pago.PuedeCobrar)
+                    {
+                        <div class="alert alert-warning mt-4" role="alert">
+                            @Model.MensajeError
+                        </div>
+
+                        @if (Model.Pago.IdEstatus is 2 or 3)
+                        {
+                            <div class="d-grid d-md-flex justify-content-md-end">
+                                <a asp-controller="HojaAdeudo"
+                                   asp-action="DescargarConstancia"
+                                   asp-route-idConstancia="@Model.Pago.IdConstancia"
+                                   asp-route-idCuenta="@Model.Pago.IdCuenta"
+                                   class="btn btn-principal">
+                                    <i class="fas fa-file-pdf me-1"></i> Descargar constancia
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mt-4" role="note">
+                            <i class="fas fa-lock me-1"></i>
+                            El cobro se realiza en la pasarela segura de EVO Payments.
+                            Al terminar podrás descargar e imprimir tu constancia.
+                        </div>
+
+                        <div class="d-grid d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-principal" id="btnPagarConstancia">
+                                <i class="fas fa-credit-card me-1"></i>
+                                Pagar @Model.Pago.Total.ToString("C", new CultureInfo("es-MX"))
+                            </button>
+                        </div>
+                    }
+                }
+
+                <div class="text-center mt-4">
+                    <a asp-controller="HojaAdeudo" asp-action="HojaAdeudo" class="text-decoration-none">
+                        Volver a constancias
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="modalPagoEvo" tabindex="-1" aria-labelledby="modalPagoEvoLabel" aria-hidden="true" style="z-index:1000000;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="h5 modal-title" id="modalPagoEvoLabel">
+                    <i class="fas fa-lock me-1"></i> Pago seguro
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" style="min-height: 520px; overflow-y: auto;">
+                <div id="evo-checkout-container"></div>
+            </div>
+            <div class="modal-footer">
+                <small class="text-muted">Los datos de tu tarjeta se capturan directamente en EVO Payments.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (Model.Pago is not null && Model.Pago.PuedeCobrar)
+    {
+        <script nonce="@(ViewContext.HttpContext.Items["csp-nonce"])">
+            window.constanciaPago = {
+                idConstancia: @Model.Pago.IdConstancia,
+                idCuenta: @Model.Pago.IdCuenta
+            };
+        </script>
+        <script src="~/js/PagoConstancia.js?v=@(DateTime.Now.Ticks)"></script>
+    }
+}

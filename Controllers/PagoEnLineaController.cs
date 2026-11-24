@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using AdministradorDeCuentas.Filters;
+using AdministradorDeCuentas.Models.Constancias;
 using AdministradorDeCuentas.Models.PagoEnLinea;
 using AdministradorDeCuentas.Services;
 
@@ -31,6 +33,12 @@ namespace AdministradorDeCuentas.Controllers
         public sealed class ConsultaAdeudoRequest
         {
             public int Cuenta { get; set; }
+        }
+
+        public sealed class IniciarPagoConstanciaRequest
+        {
+            public long IdConstancia { get; set; }
+            public int IdCuenta { get; set; }
         }
 
         public sealed class ConsultaAdeudoResponse
@@ -318,6 +326,189 @@ namespace AdministradorDeCuentas.Controllers
                     mensaje = "No fue posible conectar con la pasarela de pago."
                 });
             }
+        }
+
+        [HttpPost("constancia/iniciar")]
+        [ValidarSesion]
+        [EnableRateLimiting("constancias")]
+        public async Task<IActionResult> IniciarPagoConstancia(
+            [FromBody] IniciarPagoConstanciaRequest? request,
+            CancellationToken cancellationToken)
+        {
+            if (request is null || request.IdConstancia <= 0 || request.IdCuenta <= 0)
+            {
+                return BadRequest(new { exito = false, mensaje = "Solicitud de pago inválida." });
+            }
+
+            if (!CuentaPerteneceAlUsuario(request.IdCuenta))
+            {
+                _logger.LogWarning(
+                    "El usuario intentó pagar una constancia de una cuenta ajena ({Cuenta}).",
+                    request.IdCuenta);
+
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    exito = false,
+                    mensaje = "No tienes acceso a esa cuenta."
+                });
+            }
+
+            var preview = await _recibos.ObtenerPreviewPagoConstanciaAsync(
+                request.IdConstancia,
+                request.IdCuenta,
+                cancellationToken);
+
+            if (!preview.Exito)
+            {
+                return BadRequest(new { exito = false, mensaje = preview.Mensaje });
+            }
+
+            if (!preview.PuedeCobrar)
+            {
+                return BadRequest(new
+                {
+                    exito = false,
+                    mensaje = string.IsNullOrWhiteSpace(preview.Mensaje)
+                        ? "La constancia no se encuentra disponible para pago."
+                        : preview.Mensaje
+                });
+            }
+
+            var scriptUrl = _configuration["Evo:CheckoutScriptUrl"];
+
+            if (string.IsNullOrWhiteSpace(scriptUrl))
+            {
+                _logger.LogError("La configuración 'Evo:CheckoutScriptUrl' no está definida.");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    exito = false,
+                    mensaje = "La pasarela de pago no está configurada en este momento."
+                });
+            }
+
+            var basePublica = _configuration["Portal:PublicBaseUrl"]?.TrimEnd('/');
+            var returnUrl = _configuration["Evo:ReturnUrl"]?.Trim();
+
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                returnUrl = !string.IsNullOrWhiteSpace(basePublica)
+                    ? $"{basePublica}/pago-en-linea/retorno"
+                    : $"{Request.Scheme}://{Request.Host}/pago-en-linea/retorno";
+            }
+
+            var cancelUrl = _configuration["Evo:CancelUrl"]?.Trim();
+
+            if (string.IsNullOrWhiteSpace(cancelUrl))
+            {
+                cancelUrl = !string.IsNullOrWhiteSpace(basePublica)
+                    ? $"{basePublica}/pago-en-linea"
+                    : $"{Request.Scheme}://{Request.Host}/pago-en-linea";
+            }
+
+            var idOrden = $"C{request.IdConstancia}{DateTime.UtcNow:HHmmss}";
+
+            try
+            {
+                var sesion = await _evo.IniciarCheckoutAsync(
+                    idOrden,
+                    preview.Total,
+                    returnUrl,
+                    cancelUrl,
+                    cancellationToken,
+                    "Pago de constancia de no adeudo",
+                    $"Constancia-{preview.Folio}");
+
+                var pendiente = new PagoPendiente
+                {
+                    Tipo = "constancia",
+                    Cuenta = preview.IdCuenta,
+                    Nombre = preview.Nombre,
+                    Importe = preview.Total,
+                    IdOrden = idOrden,
+                    IdConstancia = preview.IdConstancia,
+                    FolioConstancia = preview.Folio,
+                    Servidor = "comapa",
+                    SessionId = sesion.Session!.Id!,
+                    SessionVersion = sesion.Session.Version ?? string.Empty,
+                    SuccessIndicator = sesion.SuccessIndicator ?? string.Empty,
+                    CreadoEn = DateTime.UtcNow
+                };
+
+                HttpContext.Session.SetString(
+                    "PagoPendiente",
+                    JsonSerializer.Serialize(pendiente));
+
+                HttpContext.Session.Remove("PagoCompletado");
+
+                return Ok(new
+                {
+                    exito = true,
+                    sessionId = pendiente.SessionId,
+                    scriptUrl,
+                    idOrden,
+                    importe = pendiente.Importe,
+                    nombre = pendiente.Nombre,
+                    folioConstancia = pendiente.FolioConstancia
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Configuración incompleta de la pasarela de pago.");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    exito = false,
+                    mensaje = "La pasarela de pago no está configurada correctamente."
+                });
+            }
+            catch (EvoPaymentException ex)
+            {
+                _logger.LogWarning(ex, "No se pudo iniciar EVO para la constancia {Constancia}.", request.IdConstancia);
+                return StatusCode(StatusCodes.Status502BadGateway, new
+                {
+                    exito = false,
+                    mensaje = ex.Message
+                });
+            }
+            catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning(
+                    "Tiempo de espera agotado al iniciar EVO para la constancia {Constancia}.",
+                    request.IdConstancia);
+
+                return StatusCode(StatusCodes.Status504GatewayTimeout, new
+                {
+                    exito = false,
+                    mensaje = "La pasarela de pago tardó demasiado. Intenta de nuevo."
+                });
+            }
+        }
+
+        private bool CuentaPerteneceAlUsuario(int idCuenta)
+        {
+            var cuentasJson = HttpContext.Session.GetString("CuentasUsuario");
+
+            if (string.IsNullOrWhiteSpace(cuentasJson))
+            {
+                return false;
+            }
+
+            try
+            {
+                var cuentas = JsonSerializer.Deserialize<List<CuentaSesionItem>>(
+                    cuentasJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                return cuentas?.Any(c => c.CUENTA_COMAPA == idCuenta) == true;
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
+        }
+
+        private sealed class CuentaSesionItem
+        {
+            public int CUENTA_COMAPA { get; set; }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿let TxtNewUser = $("#TxtNewUser");
+let TxtNewUser = $("#TxtNewUser");
 let TxtPassW = $("#TxtPassW");
 let TxtPassWConfrim = $("#TxtPassWConfrim");
 let TxtMail = $("#TxtMail");
@@ -114,8 +114,8 @@ function validarDatos(Usuario, PassW, PassWConfirm, Mail, MailConfirm, Tel) {
 
     if (!Usuario.trim()) return 'El Usuario es requerido';
     if (/\s/.test(Usuario)) return 'No se permiten espacios en el nombre de usuario.';
-    if (!PassW.trim()) return 'La contraseña es requerido';
-    if (!PassWConfirm.trim()) return 'Confirmar la contraseña es requerido';
+    if (!PassW.trim()) return 'La contraseña es requerida';
+    if (!PassWConfirm.trim()) return 'La confirmación de la contraseña es requerida';
     if (!Mail.trim()) return 'El Correo es requerido';
     if (!MailConfirm.trim()) return 'Confirmar el Correo es requerido';
     if (!Tel.trim()) return 'El teléfono es requerido';

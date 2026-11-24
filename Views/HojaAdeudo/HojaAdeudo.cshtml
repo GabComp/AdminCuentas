@@ -1,5 +1,7 @@
-﻿@{
+@{
     ViewData["Title"] = "Constancia de no Adeudo";
+    ViewData["Description"] = "Requisitos y solicitud en línea de la constancia de no adeudo de COMAPA Victoria.";
+    var autenticado = !string.IsNullOrWhiteSpace(Context.Session.GetString("ID_USUARIO"));
 }
 
 @section Styles {
@@ -30,23 +32,42 @@
 <header class="header">
     <div>
         <h1>Constancia de no Adeudo</h1>
-        <p>Revisa los requisitos y descarga los términos del trámite.</p>
+        <p>Revisa los requisitos, registra tu solicitud y paga en línea para descargar tu constancia.</p>
     </div>
 </header>
 
 <main>
+    @if (TempData["ErrorConstancia"] is string errorConstancia)
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-triangle-exclamation me-1"></i> @errorConstancia
+        </div>
+    }
+
     <div class="row align-items-end gy-3 justify-content-between mb-2">
-        <div class="col-12 col-md-5">
-            <label for="SelectCuentaHojaAdeudo" class="form-label">Selecciona una cuenta:</label>
-            <select id="SelectCuentaHojaAdeudo" class="form-select">
-                <option value="0">Selecciona un número de cuenta</option>
-            </select>
-            <div id="avisoCuentasHoja" class="form-text d-none">
-                No tienes cuentas vinculadas. Agrega una en "Administrar Cuenta".
-            </div>
+        <div class="col-12 col-md-6">
+            @if (autenticado)
+            {
+                <label for="SelectCuentaHojaAdeudo" class="form-label">Selecciona una cuenta:</label>
+                <select id="SelectCuentaHojaAdeudo" class="form-select">
+                    <option value="0">Selecciona un número de cuenta</option>
+                </select>
+                <div id="avisoCuentasHoja" class="form-text d-none">
+                    No tienes cuentas vinculadas. Agrega una en "Administrar Cuenta".
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mb-0">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Para solicitar una constancia necesitas
+                    <a href="/Home/Index" class="alert-link">iniciar sesión</a>
+                    y tener una cuenta vinculada.
+                </div>
+            }
         </div>
 
-        <div class="col-12 col-md-auto gap-2 justify-content-center justify-content-md-end d-none" id="divButtonDownload">
+        <div class="col-12 col-md-auto">
             <button type="button" class="btn btn-download" id="BtnDownload" aria-label="Descargar términos y condiciones del trámite">
                 <i class="fas fa-file-download"></i>
                 <span>Descargar términos</span>
@@ -54,29 +75,91 @@
         </div>
     </div>
 
+    <div id="constanciaValidacion" class="alert d-none" role="status" aria-live="polite"></div>
+
     <div class="row g-4 mt-1">
-        <div class="col-12 col-lg-7">
+        <div class="col-12 col-lg-5">
             <div class="documents-section h-100">
                 <h2 class="section-title">Requisitos</h2>
                 <ul class="requisitos-list">
                     <li>Estar al corriente con sus pagos, sin traslado de saldo.</li>
-                    <li>Copia de identificación oficial del propietario.</li>
+                    <li>No tener negociaciones, saldos congelados ni procesos jurídicos pendientes.</li>
+                    <li>La toma deberá contar con medidor instalado o en trámite.</li>
+                    <li>Identificación oficial del propietario.</li>
                     <li>Si el contrato no está a su nombre, acreditar la propiedad (escrituras o sentencia).</li>
                     <li>Si otra persona realiza el trámite, deberá presentar identificación oficial y carta poder simple.</li>
-                    <li>Formato de solicitud lleno, para notario o a quien corresponda.</li>
-                    <li>La toma deberá contar con medidor en buen funcionamiento.</li>
                 </ul>
             </div>
         </div>
 
-        <div class="col-12 col-lg-5">
+        <div class="col-12 col-lg-7">
             <div class="documents-section h-100">
-                <h2 class="section-title">Antes de iniciar</h2>
-                <p class="text-muted mb-2">
-                    Selecciona la cuenta vinculada para habilitar la descarga de los términos y condiciones.
-                    El trámite se concluye en la sucursal.
-                </p>
-                <span class="costo-tramite">Costo del trámite: $204.00</span>
+                <h2 class="section-title">Solicitar constancia</h2>
+
+                @if (autenticado)
+                {
+                    <p class="text-muted mb-2">
+                        La solicitud queda registrada y se concluye en la sucursal con el pago de los derechos e impresión.
+                    </p>
+                    <span class="costo-tramite">Costo del trámite: $204.13</span>
+
+                    <form id="formConstancia" class="d-none mt-4" novalidate>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-7">
+                                <label for="txtSolicitante" class="form-label">Nombre del solicitante</label>
+                                <input type="text" id="txtSolicitante" class="form-control" maxlength="255" required />
+                            </div>
+                            <div class="col-12 col-md-5">
+                                <label for="txtTelefono" class="form-label">Teléfono</label>
+                                <input type="text" id="txtTelefono" class="form-control" maxlength="10" inputmode="numeric" placeholder="10 dígitos" required />
+                            </div>
+                            <div class="col-12">
+                                <label for="selTipoConstancia" class="form-label">Tipo de constancia</label>
+                                <select id="selTipoConstancia" class="form-select">
+                                    <option value="2">Para Usuario</option>
+                                    <option value="1">Para Notaría</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 d-none" id="grupoNotaria">
+                                <label for="txtNotaria" class="form-label">Notaría</label>
+                                <input type="text" id="txtNotaria" class="form-control" maxlength="255" placeholder="Notaría Pública Número..." />
+                            </div>
+                            <div class="col-12 col-md-6 d-none" id="grupoDatoNotaria">
+                                <label for="txtDatoNotaria" class="form-label">Representante de la notaría</label>
+                                <input type="text" id="txtDatoNotaria" class="form-control" maxlength="255" placeholder="Nombre del notario o representante" />
+                            </div>
+                            <div class="col-12">
+                                <label for="txtObservacion" class="form-label">Motivo de la constancia</label>
+                                <textarea id="txtObservacion" class="form-control" rows="2" maxlength="512" placeholder="Ej. Trámite notarial, compraventa, apertura de crédito..." required></textarea>
+                            </div>
+                            <div class="col-12 d-grid d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-principal" id="btnSolicitarConstancia">
+                                    <i class="fa-solid fa-file-circle-plus me-1"></i> Solicitar constancia
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="constanciaExito" class="alert alert-success d-none mt-4" role="status" aria-live="polite">
+                        <h3 class="h5">Solicitud registrada</h3>
+                        <p class="mb-2" id="lblFolioConstancia"></p>
+                        <p class="mb-2" id="lblImporteConstancia"></p>
+                        <p class="mb-3">
+                            Paga en línea para descargar tu constancia en PDF, o acude a la sucursal con una
+                            identificación oficial.
+                        </p>
+                        <a href="#" id="btnPagarConstanciaPortal" class="btn btn-principal d-none">
+                            <i class="fas fa-credit-card me-1"></i> Pagar en línea
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-2">
+                        Inicia sesión para registrar la solicitud de constancia.
+                    </p>
+                    <span class="costo-tramite">Costo del trámite: $204.13</span>
+                }
             </div>
         </div>
     </div>

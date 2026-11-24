@@ -326,7 +326,8 @@ function asignarEventos(elemento, doc) {
         const ventanaPDF = window.open('', '_blank');
         ConsultaPDFModel.filtros[0].id_cuenta = DatosValidacion.filtros[0].id_cuenta;
         ConsultaPDFModel.filtros[0].id_recibo = doc.id_recibo;
-        option = 1;
+        // Si el navegador bloquea la ventana emergente, se descarga el PDF.
+        option = ventanaPDF ? 1 : 2;
         ConsultaReciboPDF(ventanaPDF);
     });
 
@@ -420,7 +421,7 @@ function ConsultaReciboPDF(ventanaPDF) {
         cache: false,
         success: function (data) {
             if (data.ok) {
-                if (option == 1) {
+                if (option == 1 && ventanaPDF) {
                     const blob = base64ToPdfBlob(data.body);
                     const url = URL.createObjectURL(blob);
 

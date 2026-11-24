@@ -116,6 +116,28 @@ Para probar el pago completo en la máquina local:
 EVO (`TEST1114864`). El `Evo:Password` y la `ApiSettings:RecibosApiKey` se toman
 de user-secrets.
 
+### Prueba del pago de constancia en línea
+
+Con el merchant de pruebas `TEST1114864` se puede cerrar el flujo completo
+(registro → pago EVO → constancia en estatus 2):
+
+1. Vincular al usuario de prueba una cuenta elegible (sin adeudo y con medidor).
+2. Registrar la constancia en **Constancia de no Adeudo** y pulsar
+   **Pagar en línea**.
+3. En el formulario de EVO usar una tarjeta de prueba de México
+   ([documentación oficial](https://evopaymentsmexico.gateway.mastercard.com/api/documentation/integrationGuidelines/supportedFeatures/testAndGoLive.html?locale=en_US)):
+   - Visa `4012000033330026` (sin 3DS), vencimiento `01/39`, CVV `100`.
+   - Mastercard `5424180279791732` (con 3DS), vencimiento `01/39`, CVV `100`.
+   - El emulador 3DS aparece en el mismo modal; dejar el resultado `(Y)` y
+     enviar.
+4. Al volver, el comprobante muestra folio de pago, folio de constancia e
+   importe `$204.13`, y la tabla queda con `id_estatus = 2` e `id_pago`
+   capturado.
+5. Pulsar **Descargar constancia**: el PDF debe abrir una sola hoja y el QR debe
+   resolver a `https://validador.comapavictoria.gob.mx/Validar?token=...`.
+6. Borrar después la constancia y el vínculo de prueba, y la venta de "otros"
+   que generó `usp_GuardarCobro` (`Ventanillas.Opr_Ventas` y `Opr_DetVentas`).
+
 La contraseña del usuario de servicio `test` de `ComapaInternet.Api` se rotó
 en el entorno local para poder probar recibos. Si otro consumidor usa ese
 usuario, debe actualizar sus credenciales.
@@ -154,6 +176,48 @@ sistema operativo, copie los TTF en `Resources/fonts` del proyecto.
 
 El servicio es sin estado: puede escalarse horizontalmente sin coordinación
 entre instancias.
+
+## Constancias de no adeudo
+
+- La página `/HojaAdeudo/HojaAdeudo` permite **pre-registrar** una solicitud
+  para la cuenta vinculada del usuario.
+- La API valida: sin adeudo, sin negociaciones, sin saldos congelados, sin
+  constancia en trámite, sin sentencia y con medidor instalado o en trámite.
+- El registro se inserta en `Ventanillas.Opr_ConstanciasNoAdeudo` con estatus
+  **1 (Solicitado)**. El folio se genera por trigger de la base.
+- El cobro y la impresión se concluyen en sucursal (costo $204.13 con IVA); el
+  portal permite pagar la constancia en línea con EVO y la deja en estatus
+  **2 (Cobrado)** con el folio de pago en `id_pago`. Al pagar, la API también
+  fija la fecha de emisión (`fecha_genero`), el mes y el texto de la fecha, y
+  genera la URL de validación con el `Token` de la constancia.
+- Configuración API: `Constancias:UsuarioGenero` (por defecto `WEB01`) es el
+  código que queda en `id_genero` para identificar solicitudes web;
+  `Constancias:Sucursal`, `Constancias:Operador` y `Constancias:FormaPago`
+  definen los datos del cobro. `Constancias:ValidadorUrl` (por defecto
+  `https://validador.comapavictoria.gob.mx/Validar`) alimenta el QR;
+  `Constancias:Firmante` y `Constancias:FirmanteCargo` se imprimen en la firma.
+- Endpoints: `POST /api/constancias/validar`,
+  `POST /api/constancias/solicitar`, `POST /api/constancias/preview-pago`,
+  `POST /api/constancias/aplicar-pago` y
+  `GET /api/constancias/{id}/pdf` (JWT + API Key).
+
+### Constancia en PDF
+
+- `ConstanciaPdfService` arma la constancia en memoria con PDFsharp/SkiaSharp y
+  no la persiste. Una hoja tamaño carta con la misma estructura del sistema de
+  ventanillas: encabezado con logotipos, fecha, `CONSTANCIA NÚMERO/{folio}`,
+  titular, destinatario, párrafos justificados, firma y QR de validación.
+- Tipo **1 (notaría)**: destinatario `ATENCION AL` + `dato_notaria` + `notaria`.
+  Tipo **2 (usuario)**: `A QUIEN CORRESPONDA.`
+- Solo se genera si el estatus es **2 (Cobrado)** o **3 (Impreso)**. En estatus
+  **1** responde `409` y en constancias canceladas o inexistentes, error.
+- El portal lo descarga con
+  `GET /HojaAdeudo/DescargarConstancia?idConstancia=...&idCuenta=...`, validando
+  que la cuenta pertenezca al usuario en sesión. El botón aparece en el
+  comprobante de pago y en la página de la constancia ya pagada.
+- La tipografía es Courier New (monoespaciada). Si no está instalada se usa
+  Arial; se puede forzar con `Reportes:FuenteMonoRegular` y
+  `Reportes:FuenteMonoNegrita`.
 
 ## Seguridad y despliegue
 

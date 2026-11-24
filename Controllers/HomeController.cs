@@ -22,6 +22,20 @@ namespace AdministradorDeCuentas.Controllers
 
         public IActionResult Index()
         {
+            // Si ya hay una sesión válida, se continúa al menú en lugar de
+            // mostrar de nuevo el formulario de login.
+            var idUsuario = HttpContext.Session.GetString("ID_USUARIO");
+            var usuario = HttpContext.Session.GetString("UsuarioSesion");
+
+            if (!string.IsNullOrWhiteSpace(idUsuario) &&
+                int.TryParse(idUsuario, out var idSesion) &&
+                idSesion > 0 &&
+                !string.IsNullOrWhiteSpace(usuario) &&
+                !string.Equals(usuario, "null", StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction(nameof(Menu));
+            }
+
             return View();
         }
 
@@ -134,8 +148,9 @@ namespace AdministradorDeCuentas.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public IActionResult Error(int? statusCode = null)
         {
+            ViewData["StatusCode"] = statusCode;
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
  

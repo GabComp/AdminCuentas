@@ -1,5 +1,6 @@
 @{
     ViewData["Title"] = "Inicio";
+    var sesionActiva = !string.IsNullOrWhiteSpace(Context.Session.GetString("ID_USUARIO"));
 }
 
 @section Styles {
@@ -19,8 +20,8 @@
             <a href="/pago-en-linea" class="landing-btn landing-btn-primary">
                 <i class="fa-solid fa-credit-card"></i> Pagar en línea
             </a>
-            <a asp-controller="Home" asp-action="Index" class="landing-btn landing-btn-outline">
-                <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+            <a asp-controller="Home" asp-action="@(sesionActiva ? "Menu" : "Index")" class="landing-btn landing-btn-outline">
+                <i class="fa-solid fa-right-to-bracket"></i> @(sesionActiva ? "Ir al menú" : "Iniciar sesión")
             </a>
             <a asp-controller="Home" asp-action="ReporteFuga" class="landing-btn landing-btn-outline">
                 <i class="fa-solid fa-droplet"></i> Reportar fuga

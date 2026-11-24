@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using AdministradorDeCuentas.Models.Constancias;
 using AdministradorDeCuentas.Models.PagoEnLinea;
 using AdministradorDeCuentas.Services;
 using PrototipoComapa.Extensions;
@@ -208,6 +209,49 @@ namespace AdministradorDeCuentas.Pages
                     out var fechaOrden))
             {
                 fechaPago = fechaOrden;
+            }
+
+            if (string.Equals(pendiente.Tipo, "constancia", StringComparison.OrdinalIgnoreCase))
+            {
+                var pagoConstancia = await _recibos.AplicarPagoConstanciaAsync(
+                    new ConstanciaPagoApiRequest
+                    {
+                        IdConstancia = pendiente.IdConstancia,
+                        IdCuenta = pendiente.Cuenta,
+                        Referencia = pendiente.IdOrden
+                    },
+                    cancellationToken);
+
+                if (!pagoConstancia.Exito)
+                {
+                    MensajeError = pagoConstancia.Mensaje;
+                    return Page();
+                }
+
+                var completadoConstancia = new PagoCompletado
+                {
+                    Tipo = "constancia",
+                    Cuenta = pendiente.Cuenta,
+                    Nombre = pendiente.Nombre,
+                    Importe = pagoConstancia.Total > 0 ? pagoConstancia.Total : pendiente.Importe,
+                    Folio = pagoConstancia.FolioPago,
+                    IdOrden = pendiente.IdOrden,
+                    IdConstancia = pendiente.IdConstancia,
+                    FolioConstancia = string.IsNullOrWhiteSpace(pagoConstancia.Folio)
+                        ? pendiente.FolioConstancia
+                        : pagoConstancia.Folio,
+                    MarcaTarjeta = tarjeta?.Brand ?? string.Empty,
+                    UltimosDigitos = ultimosDigitos,
+                    Fecha = fechaPago
+                };
+
+                HttpContext.Session.SetString(
+                    "PagoCompletado",
+                    JsonSerializer.Serialize(completadoConstancia));
+
+                HttpContext.Session.Remove("PagoPendiente");
+
+                return RedirectToPage("/PagoCompletado");
             }
 
             var usuarioPago = _configuration["ApiSettings:RecibosUsuario"]?.Trim();

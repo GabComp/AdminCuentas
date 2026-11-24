@@ -274,6 +274,7 @@ builder.Services.AddRateLimiter(options =>
     AgregarPolitica("registro", 3, TimeSpan.FromMinutes(10));
     AgregarPolitica("restablecimiento", 3, TimeSpan.FromMinutes(15));
     AgregarPolitica("recibos", 60, TimeSpan.FromMinutes(1));
+    AgregarPolitica("constancias", 5, TimeSpan.FromMinutes(10));
     AgregarPolitica("reporte-fuga", 5, TimeSpan.FromMinutes(10));
 });
 
@@ -315,6 +316,9 @@ app.Use(async (context, next) =>
 });
 
 app.UseStaticFiles();
+
+// Páginas 404/errores sin cuerpo (por ejemplo, rutas inexistentes).
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
 
 app.UseRouting();
 app.UseSession();

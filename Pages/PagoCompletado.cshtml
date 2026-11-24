@@ -4,7 +4,9 @@
 @model PagoCompletadoModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Pago aplicado";
+    var esConstancia = string.Equals(Model.Pago?.Tipo, "constancia", StringComparison.OrdinalIgnoreCase);
+    var claseImprimir = esConstancia ? "btn-secondary" : "btn-primary";
+    ViewData["Title"] = esConstancia ? "Constancia pagada" : "Pago aplicado";
     ViewData["Description"] = "Comprobante del pago en línea de COMAPA Victoria.";
 }
 
@@ -33,7 +35,7 @@
         <div class="breadcrumb">
             <a asp-page="/pago-en-linea">Pago en línea</a> / <span>Comprobante</span>
         </div>
-        <h1>Pago aplicado</h1>
+        <h1>@(esConstancia ? "Constancia pagada" : "Pago aplicado")</h1>
     </div>
 </section>
 
@@ -46,14 +48,26 @@
                         <i class="fas fa-circle-check"></i>
                     </div>
                     <h2 class="h3 mb-1" style="font-family: var(--font-heading); color: var(--color-gob-guinda);">
-                        Pago registrado correctamente
+                        @(esConstancia ? "Constancia de no adeudo pagada" : "Pago registrado correctamente")
                     </h2>
-                    <p class="text-muted mb-0">Conserva este comprobante como referencia de tu pago.</p>
+                    <p class="text-muted mb-0">
+                        @(esConstancia
+                            ? "Tu constancia está pagada. Descárgala e imprímela cuando la necesites."
+                            : "Conserva este comprobante como referencia de tu pago.")
+                    </p>
                 </div>
 
                 <div class="alert alert-success text-center" role="status">
-                    Folio: <strong>@Model.Pago!.Folio</strong>
+                    Folio de pago: <strong>@Model.Pago!.Folio</strong>
                 </div>
+
+                @if (esConstancia)
+                {
+                    <div class="alert alert-info" role="status">
+                        <strong>Constancia:</strong> @Model.Pago.FolioConstancia<br />
+                        Descarga tu constancia en PDF (una hoja) o acude a la sucursal con este comprobante.
+                    </div>
+                }
 
                 @if (Model.Pago.Contingencia)
                 {
@@ -71,6 +85,12 @@
 
                     <dt class="col-sm-4">Titular</dt>
                     <dd class="col-sm-8">@Model.Pago.Nombre</dd>
+
+                    @if (esConstancia && !string.IsNullOrWhiteSpace(Model.Pago.FolioConstancia))
+                    {
+                        <dt class="col-sm-4">Constancia</dt>
+                        <dd class="col-sm-8">@Model.Pago.FolioConstancia</dd>
+                    }
 
                     <dt class="col-sm-4">Importe pagado</dt>
                     <dd class="col-sm-8 fw-bold text-success">
@@ -100,11 +120,30 @@
                 <hr class="my-4" />
 
                 <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 no-print">
-                    <button type="button" class="btn-primary js-imprimir">
+                    @if (esConstancia)
+                    {
+                        <a asp-controller="HojaAdeudo"
+                           asp-action="DescargarConstancia"
+                           asp-route-idConstancia="@Model.Pago.IdConstancia"
+                           asp-route-idCuenta="@Model.Pago.Cuenta"
+                           class="btn-primary">
+                            <i class="fas fa-file-pdf me-1"></i> Descargar constancia
+                        </a>
+                    }
+                    <button type="button" class="js-imprimir @claseImprimir">
                         <i class="fas fa-print me-1"></i> Imprimir comprobante
                     </button>
-                    <a asp-page="/pago-en-linea" class="btn-secondary">Nueva consulta</a>
-                    <a href="/pago-en-linea" class="btn-secondary">Volver al pago</a>
+                    @if (esConstancia)
+                    {
+                        <a asp-controller="HojaAdeudo" asp-action="HojaAdeudo" class="btn-secondary">
+                            Ir a constancias
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-page="/pago-en-linea" class="btn-secondary">Nueva consulta</a>
+                        <a href="/pago-en-linea" class="btn-secondary">Volver al pago</a>
+                    }
                 </div>
             </div>
         </div>

@@ -202,11 +202,14 @@ namespace AdministradorDeCuentas.Models.PagoEnLinea
 
     public sealed class PagoPendiente
     {
+        public string Tipo { get; set; } = "agua";
         public int Cuenta { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public decimal Importe { get; set; }
         public string IdOrden { get; set; } = string.Empty;
         public int IdSaldo { get; set; }
+        public long IdConstancia { get; set; }
+        public string FolioConstancia { get; set; } = string.Empty;
         public string Servidor { get; set; } = string.Empty;
         public string SessionId { get; set; } = string.Empty;
         public string SessionVersion { get; set; } = string.Empty;
@@ -216,11 +219,14 @@ namespace AdministradorDeCuentas.Models.PagoEnLinea
 
     public sealed class PagoCompletado
     {
+        public string Tipo { get; set; } = "agua";
         public int Cuenta { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public decimal Importe { get; set; }
         public string Folio { get; set; } = string.Empty;
         public string IdOrden { get; set; } = string.Empty;
+        public long IdConstancia { get; set; }
+        public string FolioConstancia { get; set; } = string.Empty;
         public string MarcaTarjeta { get; set; } = string.Empty;
         public string UltimosDigitos { get; set; } = string.Empty;
         public bool Contingencia { get; set; }

@@ -1,4 +1,4 @@
-﻿let TxtUserUpdate = $("#TxtUserUpdate");
+let TxtUserUpdate = $("#TxtUserUpdate");
 let TxtMailUpdate = $("#TxtMailUpdate");
 let TxtMailConfirmUpdate = $("#TxtMailConfirmUpdate");
 let TxtPassUpdate = $("#TxtPassUpdate");
@@ -55,8 +55,8 @@ function validarDatosUpdate(Usuario, Mail, MailConfirm, PassW, PassWConfirm, Tel
     }
     if (!Mail.trim()) return 'El Correo es requerido';
     if (!MailConfirm.trim()) return 'Confirmar el Correo es requerido';
-    if (!PassW.trim()) return 'La contraseña es requerido';
-    if (!PassWConfirm.trim()) return 'Confirmar la contraseña es requerido';
+    if (!PassW.trim()) return 'La contraseña es requerida';
+    if (!PassWConfirm.trim()) return 'La confirmación de la contraseña es requerida';
     if (!Tel.trim()) return 'El teléfono es requerido';
 
     if (!regexMail.test(Mail)) return 'ingrese un correo valido';

@@ -34,7 +34,9 @@ namespace AdministradorDeCuentas.Services
             decimal importe,
             string? returnUrlPersonalizada,
             string? cancelUrlPersonalizada,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            string? descripcion = null,
+            string? referencia = null)
         {
             var initiateUrl = ObtenerConfiguracionObligatoria("Evo:InitiateCheckoutUrl");
             var returnUrl = string.IsNullOrWhiteSpace(returnUrlPersonalizada)
@@ -83,8 +85,8 @@ namespace AdministradorDeCuentas.Services
                     id = idOrden,
                     amount = decimal.Round(importe, 2),
                     currency = "MXN",
-                    description = "Pago de recibo de agua",
-                    reference = $"Recibo-{idOrden}"
+                    description = descripcion ?? "Pago de recibo de agua",
+                    reference = referencia ?? $"Recibo-{idOrden}"
                 }
             };
 

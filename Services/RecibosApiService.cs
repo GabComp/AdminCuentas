@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using AdministradorDeCuentas.Models.Constancias;
 using AdministradorDeCuentas.Models.PagoEnLinea;
 
 namespace AdministradorDeCuentas.Services
@@ -312,6 +313,220 @@ namespace AdministradorDeCuentas.Services
 
                 return AplicarPagoResult.Error(
                     "El sistema comercial devolvió una respuesta no válida. Acude a la sucursal con tu comprobante.");
+            }
+        }
+
+        public async Task<ConstanciaValidacionApiResponse> ValidarConstanciaAsync(
+            int cuenta,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var response = await _client.PostAsJsonAsync(
+                    "constancias/validar",
+                    new { idCuenta = cuenta },
+                    cancellationToken);
+
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ConstanciaValidacionApiResponse
+                    {
+                        Exito = false,
+                        Mensaje = ExtraerMensaje(body)
+                            ?? "No fue posible validar la cuenta para la constancia."
+                    };
+                }
+
+                return JsonSerializer.Deserialize<ConstanciaValidacionApiResponse>(body)
+                    ?? new ConstanciaValidacionApiResponse
+                    {
+                        Exito = false,
+                        Mensaje = "La API devolvió una respuesta no válida."
+                    };
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogError(ex, "Error validando la constancia de la cuenta {Cuenta}.", cuenta);
+
+                return new ConstanciaValidacionApiResponse
+                {
+                    Exito = false,
+                    Mensaje = "No fue posible conectar con el sistema comercial. Intenta de nuevo."
+                };
+            }
+        }
+
+        public async Task<ConstanciaSolicitudApiResponse> SolicitarConstanciaAsync(
+            ConstanciaSolicitudApiRequest request,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var response = await _client.PostAsJsonAsync(
+                    "constancias/solicitar",
+                    request,
+                    cancellationToken);
+
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new ConstanciaSolicitudApiResponse
+                    {
+                        Exito = false,
+                        Mensaje = ExtraerMensaje(body)
+                            ?? "No fue posible registrar la solicitud de constancia."
+                    };
+                }
+
+                return JsonSerializer.Deserialize<ConstanciaSolicitudApiResponse>(body)
+                    ?? new ConstanciaSolicitudApiResponse
+                    {
+                        Exito = false,
+                        Mensaje = "La API devolvió una respuesta no válida."
+                    };
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error registrando la constancia de la cuenta {Cuenta}.",
+                    request.IdCuenta);
+
+                return new ConstanciaSolicitudApiResponse
+                {
+                    Exito = false,
+                    Mensaje = "No fue posible conectar con el sistema comercial. Intenta de nuevo."
+                };
+            }
+        }
+
+        public async Task<ConstanciaPagoPreviewApiResponse> ObtenerPreviewPagoConstanciaAsync(
+            long idConstancia,
+            int idCuenta,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var response = await _client.PostAsJsonAsync(
+                    "constancias/preview-pago",
+                    new { idConstancia, idCuenta },
+                    cancellationToken);
+
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                var resultado = JsonSerializer.Deserialize<ConstanciaPagoPreviewApiResponse>(body);
+
+                if (resultado is null)
+                {
+                    return new ConstanciaPagoPreviewApiResponse
+                    {
+                        Exito = false,
+                        Mensaje = "La API devolvió una respuesta no válida."
+                    };
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    resultado.Exito = false;
+                }
+
+                return resultado;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error consultando el cobro de la constancia {Constancia}.",
+                    idConstancia);
+
+                return new ConstanciaPagoPreviewApiResponse
+                {
+                    Exito = false,
+                    Mensaje = "No fue posible consultar el cobro de la constancia."
+                };
+            }
+        }
+
+        public async Task<byte[]?> ObtenerPdfConstanciaAsync(
+            long idConstancia,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var response = await _client.GetAsync(
+                    $"constancias/{idConstancia}/pdf",
+                    cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                    _logger.LogWarning(
+                        "La constancia {Constancia} no se pudo descargar ({StatusCode}): {Mensaje}",
+                        idConstancia,
+                        response.StatusCode,
+                        ExtraerMensaje(body));
+
+                    return null;
+                }
+
+                return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error descargando el PDF de la constancia {Constancia}.",
+                    idConstancia);
+
+                return null;
+            }
+        }
+
+        public async Task<ConstanciaPagoApiResponse> AplicarPagoConstanciaAsync(
+            ConstanciaPagoApiRequest request,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                using var response = await _client.PostAsJsonAsync(
+                    "constancias/aplicar-pago",
+                    request,
+                    cancellationToken);
+
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                var resultado = JsonSerializer.Deserialize<ConstanciaPagoApiResponse>(body);
+
+                if (resultado is null)
+                {
+                    return new ConstanciaPagoApiResponse
+                    {
+                        Exito = false,
+                        Mensaje = "La API devolvió una respuesta no válida."
+                    };
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    resultado.Exito = false;
+                }
+
+                return resultado;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error aplicando el pago de la constancia {Constancia}.",
+                    request.IdConstancia);
+
+                return new ConstanciaPagoApiResponse
+                {
+                    Exito = false,
+                    Mensaje = "No fue posible aplicar el pago de la constancia."
+                };
             }
         }
 

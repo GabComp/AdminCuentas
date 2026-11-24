@@ -11,9 +11,8 @@ let objConsultarCuentas = {
 };
 
 $(document).ready(function () {
-    //localStorage.clear();
-    CerrarSesion();
-
+    // No cerrar la sesión al mostrar el login: un usuario autenticado puede
+    // llegar aquí desde "Inicio" y no debe perder su sesión.
     setTimeout(() => {
         TxtPass.val('');
     }, 300);

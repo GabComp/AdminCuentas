@@ -19,4 +19,9 @@
     <None Remove="AdministradorDeCuentas.Tests\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Los secretos de producción se configuran en el servidor, no se publican. -->
+    <Content Update="appsettings.Production.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
 </Project>

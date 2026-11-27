@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /AdministradorDeCuentas/
+Disallow: /Recibos/
+Disallow: /Home/ActualizarDatos
+Disallow: /api/

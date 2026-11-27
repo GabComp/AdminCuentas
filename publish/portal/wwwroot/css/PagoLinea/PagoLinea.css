@@ -1,0 +1,109 @@
+﻿:root{
+    --Rojo_Principal: #611232;
+    --Rojo_Secundario: #9b2247;
+    --Verde_Principal: #002f2a;
+    --Verde_Secundario: #1e5b4f;
+    --Dorado_Principal: #e6d194;
+    --Dorado_Secundario: #a57f2c;
+    --Gris_: #98989A;
+    --Negro_: #161a1d;
+}
+
+body{
+    background:#fff;
+}
+
+.titulo-principal{
+    color:var(--Rojo_Secundario);
+    font-size:42px;
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+.texto-descripcion{
+    color:var(--Gris);
+    font-size:20px;
+    line-height:1.6;
+}
+
+.etiqueta{
+    color:#4a4a4a;
+    font-size:20px;
+    font-weight:500;
+}
+
+.input-cuenta{
+    width:250px;
+    height:55px;
+    border:2px solid var(--Rojo_Principal);
+    border-radius:10px;
+    font-size:20px;
+}
+
+.input-cuenta:focus{
+    border-color:var(--Gris);
+    box-shadow:0 0 0 .15rem rgba(91,25,50,.2);
+}
+
+.btn-pagar{
+    background:var(--Verde_Principal);
+    color:#fff;
+    border-radius:15px;
+    padding:10px 35px;
+    font-size:22px;
+    font-weight:600;
+}
+
+.btn-pagar:hover{
+    background: var(--Verde_Secundario);
+    color: #fff;
+}
+
+.linea-separador{
+    margin:60px 0;
+    border-top:2px solid #bfa98c;
+}
+
+.btn-recibo{
+    width:100%;
+    max-width:500px;
+    background: var(--Dorado_Secundario);
+    color: #fff;
+    border:none;
+    border-radius:18px;
+    padding:15px;
+    font-size:24px;
+    font-weight:700;
+}
+
+.btn-recibo:hover{
+    background: var(--Dorado_Principal);
+    color:white;
+}
+
+/* Responsive */
+
+@media (max-width:768px){
+
+    .titulo-principal{
+        font-size:32px;
+    }
+
+    .texto-descripcion{
+        font-size:18px;
+    }
+
+    .input-cuenta{
+        width:100%;
+    }
+
+    .btn-pagar{
+        width:100%;
+    }
+
+    .btn-recibo{
+        width:100%;
+        font-size:20px;
+    }
+
+}

@@ -6,6 +6,9 @@ Los valores sensibles deben configurarse por entorno:
 - **Desarrollo:** `dotnet user-secrets`.
 - **Producción:** variables de entorno de App Service o Azure Key Vault.
 
+Para publicar la API y el portal en el servidor de pruebas de Windows Server
+2025 (IIS, `192.168.0.199`), seguir `DESPLIEGUE-PRUEBAS.md`.
+
 ## Claves requeridas
 
 | Clave | Uso |
@@ -19,7 +22,8 @@ Los valores sensibles deben configurarse por entorno:
 | `ApiSettings:RecibosFormaPago` | Forma de pago interna (por defecto `4`). |
 | `ApiSettings:PermitirAplicarPago` | Interruptor de aplicación de pagos. Por defecto `false`. |
 | `Evo:*` | Configuración de la pasarela EVO. Los valores de ejemplo provienen de `PrototipoWebSitioComapa` (pasarela de pruebas). |
-| `Smtp:Host`, `Smtp:Port`, `Smtp:User`, `Smtp:Password`, `Smtp:From` | Envío del correo de restablecimiento. |
+| `Smtp:Host`, `Smtp:Port`, `Smtp:User`, `Smtp:Password`, `Smtp:From` | Envío de correo por SMTP (códigos, restablecimiento y comprobantes). |
+| `Resend:ApiKey`, `Resend:From` | Envío por la API HTTP de Resend (HTTPS 443). Si `Resend:ApiKey` está definida, tiene prioridad sobre SMTP. |
 
 ## Ejemplo para desarrollo
 
@@ -28,6 +32,38 @@ dotnet user-secrets set "ApiSettings:RecibosApiKey" "..." --project Administrado
 dotnet user-secrets set "ApiSettings:RecibosLoginUser" "..." --project AdministradorDeCuentas.csproj
 dotnet user-secrets set "ApiSettings:RecibosLoginPassword" "..." --project AdministradorDeCuentas.csproj
 ```
+
+### Correo transaccional: Resend o SMTP
+
+El portal usa **Resend por HTTPS** si existe `Resend:ApiKey`; si no, usa SMTP
+con MailKit. Ambos sirven para los códigos de registro, el restablecimiento y
+los comprobantes.
+
+Resend (recomendado: solo requiere el puerto 443):
+
+```json
+"Resend": {
+  "ApiKey": "re_...",
+  "From": "no-reply@tudominio-verificado.com"
+}
+```
+
+SMTP:
+
+```json
+"Smtp": {
+  "Host": "smtp.tudominio.com",
+  "Port": 587,
+  "User": "no-reply@tudominio.com",
+  "Password": "...",
+  "From": "no-reply@tudominio.com",
+  "EnableSsl": true
+}
+```
+
+En Resend el remitente debe pertenecer a un dominio verificado. Para pruebas
+sin dominio propio, `onboarding@resend.dev` solo entrega al correo dueño de la
+cuenta de Resend.
 
 ## Rotación obligatoria
 
